@@ -1,0 +1,15 @@
+{
+    "include": ["src"],
+    "exclude": ["node_modules", "build"],
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "module": "nodenext",
+        "declaration": true,
+        "moduleResolution": "nodenext",
+        "target": "esnext",
+        "moduleDetection": "force",
+        "outDir": "./dist",
+        "skipLibCheck": true,
+        "strict": true
+    }
+}
