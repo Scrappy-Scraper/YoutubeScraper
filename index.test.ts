@@ -20,7 +20,7 @@ await videoParser.load({videoId: "dQw4w9WgXcQ"});
 const channelId = videoParser.channelId!;
 
 await Promise.all([
-    videoParser.fetchTranscripts({limit: 3}),
+    videoParser.fetchTranscripts({languageLimit: 3}),
     channelParser.load({channelId})
 ]);
 while (channelParser.hasMoreVideos()) await channelParser.fetchMoreVideos();

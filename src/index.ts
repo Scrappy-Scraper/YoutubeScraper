@@ -62,10 +62,10 @@ export class VideoParser {
         return metaData;
     }
 
-    async fetchTranscripts(params: { limit?: number }) {
+    async fetchTranscripts(params: { languageLimit?: number }) {
         const metadata = this._metadata;
         if (metadata === null) throw new Error('Video is not loaded');
-        const limit = params.limit || 3;
+        const languageLimit = params.languageLimit || 3;
 
         try {
             // Get transcript data from YouTube API
@@ -84,7 +84,7 @@ export class VideoParser {
             // Parse and fetch all available transcripts
             const transcripts: Transcript[] = [];
             const captionTracks = tracksData.captionTracks || [];
-            const selectedLangCodes: Set<string> = new Set<string>(Array.from(selectedLanguageCodes).slice(0, limit));
+            const selectedLangCodes: Set<string> = new Set<string>(Array.from(selectedLanguageCodes).slice(0, languageLimit));
             const filteringByLanguage = selectedLangCodes.size > 0;
 
             const fetchTasks = captionTracks.map((track: {name: {runs: {text: string}[]}, baseUrl: string, languageCode: string, kind: string}) => {
