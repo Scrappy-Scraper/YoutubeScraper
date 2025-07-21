@@ -17,7 +17,8 @@ const channelParser = new ChannelParser({
 });
 
 await videoParser.load({videoId: "dQw4w9WgXcQ"});
-const channelId = videoParser.channelId!;
+console.log(videoParser.availableCaptions);
+const channelId = videoParser.channelId;
 
 await Promise.all([
     videoParser.fetchTranscripts({languageLimit: 3}),

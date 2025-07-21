@@ -26,10 +26,11 @@ const channelParser = new ChannelParser({
 
 // parse video
 await videoParser.load({videoId: "dQw4w9WgXcQ"});
+console.log(videoParser.availableCaptions);     // example: [ { name: 'English', languageCode: 'en', isGenerated: false } ]
 const channelId = videoParser.channelId!; // get the channelId after the load method is done
 
 await Promise.all([
-    videoParser.fetchTranscripts({languageLimit: 3}),   // load transcripts, limit to 3 languages
+    videoParser.fetchTranscripts({languageLimit: 3}),   // load transcripts, limit to 3 languages. Default is 3. Put -1 to get ALL
     channelParser.load({channelId}),                    // load info about the channel and a few videos
 ]);
 while (channelParser.hasMoreVideos()) await channelParser.fetchMoreVideos();

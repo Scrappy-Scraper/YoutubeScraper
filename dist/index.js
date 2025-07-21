@@ -6,6 +6,13 @@ const languageByPopularity = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'ja', 'ko', 't
 export class VideoParser {
     get videoId() { return this._videoId ?? ''; }
     get channelId() { return this._metadata?.videoDetails?.channelId ?? ''; }
+    get availableCaptions() {
+        return (this._metadata?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? []).map((t) => ({
+            name: t.name?.runs[0].text,
+            languageCode: t.languageCode ?? "",
+            isGenerated: (t.kind ?? "").toLowerCase() === 'asr',
+        })) ?? [];
+    }
     _videoId = null;
     _proxyUrls = [];
     _proxyUrlGenerator;
@@ -52,7 +59,9 @@ export class VideoParser {
         const metadata = this._metadata;
         if (metadata === null)
             throw new Error('Video is not loaded');
-        const limit = params.limit || 3;
+        let languageLimit = params.languageLimit || 3;
+        if (languageLimit === -1)
+            languageLimit = undefined;
         try {
             // Get transcript data from YouTube API
             const tracksData = metadata.captions?.playerCaptionsTracklistRenderer ?? [];
@@ -68,7 +77,7 @@ export class VideoParser {
             // Parse and fetch all available transcripts
             const transcripts = [];
             const captionTracks = tracksData.captionTracks || [];
-            const selectedLangCodes = new Set(Array.from(selectedLanguageCodes).slice(0, limit));
+            const selectedLangCodes = new Set(Array.from(selectedLanguageCodes).slice(0, languageLimit));
             const filteringByLanguage = selectedLangCodes.size > 0;
             const fetchTasks = captionTracks.map((track) => {
                 return (async () => {

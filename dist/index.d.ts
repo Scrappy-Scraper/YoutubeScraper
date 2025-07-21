@@ -1,6 +1,11 @@
 export declare class VideoParser {
     get videoId(): string;
     get channelId(): string;
+    get availableCaptions(): {
+        name: string;
+        languageCode: string;
+        isGenerated: boolean;
+    }[];
     private _videoId;
     private _proxyUrls;
     private _proxyUrlGenerator;
@@ -20,7 +25,7 @@ export declare class VideoParser {
         [key in string]: any;
     }>;
     fetchTranscripts(params: {
-        limit?: number;
+        languageLimit?: number;
     }): Promise<Transcript[]>;
     toJSON(): {
         id: string;

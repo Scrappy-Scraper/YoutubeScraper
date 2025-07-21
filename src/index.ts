@@ -8,6 +8,13 @@ const languageByPopularity = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'ja', 'ko', 't
 export class VideoParser {
     get videoId(): string { return this._videoId ?? ''; }
     get channelId(): string { return this._metadata?.videoDetails?.channelId ?? ''; }
+    get availableCaptions(): { name: string; languageCode: string; isGenerated: boolean }[] {
+        return (this._metadata?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? []).map((t: {[key in string]: any}) => ({
+            name: t.name?.runs[0].text,
+            languageCode: t.languageCode ?? "",
+            isGenerated: (t.kind ?? "").toLowerCase() === 'asr',
+        })) ?? [];
+    }
     private _videoId: string | null = null;
     private _proxyUrls: string[] = [];
     private _proxyUrlGenerator: ((sessionId?: string | undefined | null) => Promise<string | undefined>) | null;
@@ -65,7 +72,8 @@ export class VideoParser {
     async fetchTranscripts(params: { languageLimit?: number }) {
         const metadata = this._metadata;
         if (metadata === null) throw new Error('Video is not loaded');
-        const languageLimit = params.languageLimit || 3;
+        let languageLimit: number | undefined = params.languageLimit || 3;
+        if(languageLimit === -1) languageLimit = undefined;
 
         try {
             // Get transcript data from YouTube API
