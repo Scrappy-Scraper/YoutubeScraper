@@ -3,6 +3,7 @@ import { md5 } from 'js-md5';
 import { DOMParser } from 'xmldom';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 const languageByPopularity = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'ja', 'ko', 'th', 'ru'];
+const sleepAsync = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export class VideoParser {
     get videoId() { return this._videoId ?? ''; }
     get channelId() { return this._metadata?.videoDetails?.channelId ?? ''; }
@@ -495,4 +496,105 @@ export function getAllDescendantObjects(params) {
         descendantNodes.push(...getAllDescendantObjects({ rootNode: value, isMatch, parentKey: key }));
     }
     return descendantNodes;
+}
+export class PromiseQueue {
+    _concurrency = 3; // number of tasks that can be in-progress at the same time
+    get concurrency() { return this._concurrency; }
+    set concurrency(value) { this._concurrency = Math.max(1, value); }
+    // worker is the function that process the data
+    set worker(value) {
+        this._makeWorkerTask = value;
+    }
+    _queue = new Map(); // {taskId: taskData} // tasks to be taken
+    _inProgressTaskDataSet = new Map(); // {taskId: taskData} // tasks in-progress
+    _succeededTaskIds = new Set(); // ids of tasks that are done and succeeded
+    _failedTaskIds = new Set(); // ids of tasks that are done and failed
+    get _allTaskIds() {
+        return new Set([
+            ...this._queue.keys(),
+            ...this._inProgressTaskDataSet.keys(),
+            ...this._succeededTaskIds,
+            ...this._failedTaskIds,
+        ]);
+    }
+    get stats() {
+        return {
+            pending: Array.from(this._queue.keys()),
+            inProgress: Array.from(this._inProgressTaskDataSet.keys()),
+            succeeded: Array.from(this._succeededTaskIds),
+            failed: Array.from(this._failedTaskIds),
+        };
+    }
+    onTaskSuccess = (() => { });
+    onTaskFail = (() => { });
+    onTaskStart = (() => { });
+    _makeWorkerTask = null;
+    async allDone() {
+        let isAllDone = false;
+        while (!isAllDone) {
+            isAllDone = this._queue.size === 0 && this._inProgressTaskDataSet.size === 0;
+            await new Promise(resolve => { setTimeout(resolve, 100); });
+        }
+    }
+    enqueue(params) {
+        const { taskData, taskId, logTaskAddedWarning = false } = params;
+        if ((taskId ?? null) === null)
+            throw new Error(`taskId is required`);
+        // if added previously, don't add
+        if (this._allTaskIds.has(taskId)) {
+            if (!logTaskAddedWarning)
+                return;
+            if (this._queue.has(taskId))
+                console.warn(`Task with id ${taskId} already exists in the queue, so it's not added again`);
+            if (this._inProgressTaskDataSet.has(taskId))
+                console.warn(`Task with id ${taskId} is already in progress, so it's not added again`);
+            if (this._succeededTaskIds.has(taskId))
+                console.warn(`Task with id ${taskId} had already been worked on, so it's not added again. That task succeeded`);
+            if (this._failedTaskIds.has(taskId))
+                console.warn(`Task with id ${taskId} had already been worked on, so it's not added again. That task failed`);
+            return;
+        }
+        // add task to the queue
+        this._queue.set(taskId, taskData);
+        // put task to work
+        this._deployWorkers();
+    }
+    // take out and return the oldest item in the queue
+    _dequeue() {
+        const taskId = Array.from(this._queue.keys()).shift() ?? null;
+        if (taskId === null)
+            return null;
+        const taskData = this._queue.get(taskId);
+        this._queue.delete(taskId);
+        return { taskData, taskId };
+    }
+    _deployWorkers() {
+        while (this._queue.size > 0 && // still has pending tasks on queue
+            this._inProgressTaskDataSet.size < this._concurrency // can still add more tasks to in_progress
+        ) {
+            if (this._makeWorkerTask === null)
+                throw new Error(`PromiseQueue worker is not set. Please set it with PromiseQueue.worker = (taskData, taskId) => Promise<TaskResponseData>`);
+            const nextTask = this._dequeue(); // take out next pending task from the queue to work on
+            if (nextTask === null)
+                return; // if no pending task left to work on, return
+            const { taskData, taskId } = nextTask;
+            this._inProgressTaskDataSet.set(taskId, taskData); // record that task as in_progress
+            // callbacks
+            const baseCallbackData = { taskData, taskId, promiseQueue: this };
+            this.onTaskStart(baseCallbackData);
+            const workerTask = this._makeWorkerTask(taskData, taskId); // create the task worker
+            workerTask.then((result) => {
+                this._succeededTaskIds.add(taskId); // record it as succeeded
+                this.onTaskSuccess({ taskResponse: result, ...baseCallbackData }); // call the callback function
+            });
+            workerTask.catch((error) => {
+                this._failedTaskIds.add(taskId); // record it as failed
+                this.onTaskFail({ error, ...baseCallbackData }); // call the callback function
+            });
+            workerTask.finally(() => {
+                this._inProgressTaskDataSet.delete(taskId); // remove from list of in_progress tasks
+                this._deployWorkers(); // put remaining queued tasks to in_progress
+            });
+        }
+    }
 }

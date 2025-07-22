@@ -116,4 +116,42 @@ type ListVideoInfo = {
     title: string;
     thumbnail: string;
 };
+export declare class PromiseQueue<TaskInputData, TaskResponseData> {
+    private _concurrency;
+    get concurrency(): number;
+    set concurrency(value: number);
+    set worker(value: ((taskData: TaskInputData, taskId: string) => Promise<TaskResponseData>));
+    private _queue;
+    private _inProgressTaskDataSet;
+    private _succeededTaskIds;
+    private _failedTaskIds;
+    get _allTaskIds(): Set<string>;
+    get stats(): {
+        pending: string[];
+        inProgress: string[];
+        succeeded: string[];
+        failed: string[];
+    };
+    onTaskSuccess: ((params: {
+        taskResponse: TaskResponseData;
+    } & BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void);
+    onTaskFail: ((params: {
+        error: any;
+    } & BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void);
+    onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void);
+    private _makeWorkerTask;
+    allDone(): Promise<void>;
+    enqueue(params: {
+        taskData: TaskInputData;
+        taskId: string;
+        logTaskAddedWarning?: boolean;
+    }): void;
+    private _dequeue;
+    private _deployWorkers;
+}
+type BasePromiseQueueCallbackData<TaskInputData, TaskResponseData> = {
+    taskData: TaskInputData;
+    taskId: string;
+    promiseQueue: PromiseQueue<TaskInputData, TaskResponseData>;
+};
 export {};

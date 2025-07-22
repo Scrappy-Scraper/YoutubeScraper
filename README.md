@@ -15,6 +15,7 @@ Works in `Node.js` and `browsers`
 ## Sample Code
 
 ```aiignore
+import { ChannelParser, VideoParser } from '@scrappy-scraper/youtube_scraper';
 
 // instantiate parsers
 const videoParser = new VideoParser({
@@ -30,10 +31,10 @@ console.log(videoParser.availableCaptions);     // example: [ { name: 'English',
 const channelId = videoParser.channelId!; // get the channelId after the load method is done
 
 await Promise.all([
-    videoParser.fetchTranscripts({languageLimit: 3}),   // load transcripts, limit to 3 languages. Default is 3. Put -1 to get ALL
+    videoParser.fetchTranscripts({languageLimit: 3}),   // load transcripts, limit to 3 languages. Default is 3. Put -1 to get ALL; put 0 to get none
     channelParser.load({channelId}),                    // load info about the channel and a few videos
 ]);
-while (channelParser.hasMoreVideos()) await channelParser.fetchMoreVideos();
+while (channelParser.hasMoreVideos() && channelParser.videos.length < 100) await channelParser.fetchMoreVideos();
 
 console.log(JSON.stringify(videoParser.toJSON()))
 console.log(JSON.stringify(channelParser.toJSON()))

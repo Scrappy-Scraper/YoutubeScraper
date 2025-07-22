@@ -4,6 +4,7 @@ import { DOMParser } from 'xmldom';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const languageByPopularity = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'ja', 'ko', 'th', 'ru'];
+const sleepAsync = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class VideoParser {
     get videoId(): string { return this._videoId ?? ''; }
@@ -609,3 +610,127 @@ type ChannelMetadata = {
     channelUrl: string;
     vanityChannelUrl: string;
 };
+
+export class PromiseQueue<TaskInputData, TaskResponseData> {
+    private _concurrency: number = 3; // number of tasks that can be in-progress at the same time
+    get concurrency() { return this._concurrency; }
+    set concurrency(value: number) { this._concurrency = Math.max(1, value); }
+
+    // worker is the function that process the data
+    set worker(value: ((taskData: TaskInputData, taskId: string) => Promise<TaskResponseData>)) {
+        this._makeWorkerTask = value;
+    }
+
+    private _queue: Map<string, TaskInputData> = new Map<string, TaskInputData>(); // {taskId: taskData} // tasks to be taken
+    private _inProgressTaskDataSet: Map<string, TaskInputData> = new Map<string, TaskInputData>(); // {taskId: taskData} // tasks in-progress
+    private _succeededTaskIds: Set<string> = new Set<string>();     // ids of tasks that are done and succeeded
+    private _failedTaskIds: Set<string> = new Set<string>();        // ids of tasks that are done and failed
+    get _allTaskIds(): Set<string> { // set of all task ids ever added
+        return new Set([
+            ...this._queue.keys(),
+            ...this._inProgressTaskDataSet.keys(),
+            ...this._succeededTaskIds,
+            ...this._failedTaskIds,
+        ]);
+    }
+
+    get stats() {
+        return {
+            pending: Array.from(this._queue.keys()),
+            inProgress: Array.from(this._inProgressTaskDataSet.keys()),
+            succeeded: Array.from(this._succeededTaskIds),
+            failed: Array.from(this._failedTaskIds),
+        }
+    }
+
+    public onTaskSuccess: ((params: {taskResponse: TaskResponseData} & BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void) = (() => { /* Default to empty function */})
+    public onTaskFail: ((params: {error: any} & BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void) = (() => { /* Default to empty function */})
+    public onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void) = (() => { /* Default to empty function */})
+
+    private _makeWorkerTask: ((taskData: TaskInputData, taskId: string) => Promise<TaskResponseData>)|null = null;
+
+
+    public async allDone() {
+        let isAllDone = false;
+
+        while(!isAllDone) {
+            isAllDone = this._queue.size === 0 && this._inProgressTaskDataSet.size === 0;
+            await new Promise(resolve => {setTimeout(resolve, 100)});
+        }
+    }
+
+    public enqueue(params: {
+        taskData: TaskInputData;
+        taskId: string;
+        logTaskAddedWarning?: boolean;
+    }): void {
+        const { taskData, taskId, logTaskAddedWarning = false } = params;
+        if((taskId ?? null) === null) throw new Error(`taskId is required`);
+
+        // if added previously, don't add
+        if(this._allTaskIds.has(taskId)) {
+            if(!logTaskAddedWarning) return;
+            if(this._queue.has(taskId)) console.warn(`Task with id ${taskId} already exists in the queue, so it's not added again`);
+            if(this._inProgressTaskDataSet.has(taskId)) console.warn(`Task with id ${taskId} is already in progress, so it's not added again`);
+            if(this._succeededTaskIds.has(taskId)) console.warn(`Task with id ${taskId} had already been worked on, so it's not added again. That task succeeded`);
+            if(this._failedTaskIds.has(taskId)) console.warn(`Task with id ${taskId} had already been worked on, so it's not added again. That task failed`);
+            return;
+        }
+
+        // add task to the queue
+        this._queue.set(taskId, taskData);
+
+        // put task to work
+        this._deployWorkers();
+    }
+
+    // take out and return the oldest item in the queue
+    private _dequeue(): { taskData: TaskInputData, taskId: string}|null {
+        const taskId: string|null = Array.from(this._queue.keys()).shift() ?? null;
+        if(taskId === null) return null;
+
+        const taskData: TaskInputData = this._queue.get(taskId)!;
+        this._queue.delete(taskId);
+
+        return { taskData, taskId }
+    }
+
+    private _deployWorkers(): void {
+        while(
+            this._queue.size > 0 &&                                 // still has pending tasks on queue
+            this._inProgressTaskDataSet.size < this._concurrency    // can still add more tasks to in_progress
+        ) {
+            if(this._makeWorkerTask === null) throw new Error(`PromiseQueue worker is not set. Please set it with PromiseQueue.worker = (taskData, taskId) => Promise<TaskResponseData>`)
+            const nextTask = this._dequeue(); // take out next pending task from the queue to work on
+            if(nextTask === null) return;     // if no pending task left to work on, return
+            const { taskData, taskId } = nextTask;
+
+            this._inProgressTaskDataSet.set(taskId, taskData); // record that task as in_progress
+            // callbacks
+            const baseCallbackData = { taskData, taskId, promiseQueue: this };
+            this.onTaskStart(baseCallbackData);
+
+            const workerTask = this._makeWorkerTask(taskData, taskId); // create the task worker
+            workerTask.then((result: TaskResponseData) => {     // if the task is successful
+                this._succeededTaskIds.add(taskId);               // record it as succeeded
+                this.onTaskSuccess({ taskResponse: result, ...baseCallbackData }); // call the callback function
+            });
+            workerTask.catch((error: any) => {
+                this._failedTaskIds.add(taskId);                  // record it as failed
+                this.onTaskFail({ error, ...baseCallbackData });  // call the callback function
+            });
+            workerTask.finally(() => {                      // when done, no matter pass or fail...
+                this._inProgressTaskDataSet.delete(taskId);       // remove from list of in_progress tasks
+                this._deployWorkers();                            // put remaining queued tasks to in_progress
+            });
+        }
+    }
+
+
+}
+
+type BasePromiseQueueCallbackData<TaskInputData, TaskResponseData> = {
+    taskData: TaskInputData,
+    taskId: string,
+    promiseQueue: PromiseQueue<TaskInputData, TaskResponseData>,
+}
