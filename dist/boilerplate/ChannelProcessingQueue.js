@@ -1,0 +1,33 @@
+import PromiseQueue from "../PromiseQueue.js";
+import { reAdjustYouTubeChannelId } from "../YouTubeUrl.js";
+import ChannelParser from "../ChannelParser.js";
+export function make(params) {
+    const { concurrency = 2, onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, numVideos = 100, } = params;
+    const channelProcessingQueue = new PromiseQueue();
+    channelProcessingQueue.concurrency = concurrency; // number of tasks that can be in_progress at the same time
+    channelProcessingQueue.onTaskStart = onTaskStart;
+    channelProcessingQueue.onTaskSuccess = onTaskSuccess;
+    channelProcessingQueue.onTaskFail = onTaskFail;
+    channelProcessingQueue.reAdjustTaskId = reAdjustYouTubeChannelId;
+    channelProcessingQueue.worker = async (value) => {
+        let { channelId } = value;
+        const channelParser = new ChannelParser({ proxyUrlGenerator });
+        await channelParser.load({ channelId });
+        while (channelParser.hasMoreVideos() && channelParser.videos.length < numVideos)
+            await channelParser.fetchMoreVideos();
+        return channelParser.toJSON();
+    };
+    return channelProcessingQueue;
+}
+export function defaultOnTaskStart(params) {
+    const { taskId, taskInputData, promiseQueue } = params;
+    console.log(`➡️📺 Started parsing channel ${taskId}`);
+}
+export function defaultOnTaskSuccess(params) {
+    const { taskResponse, taskId, taskInputData, promiseQueue } = params;
+    console.log(`✅📺 Completed parsing channel ${taskId}`);
+}
+export function defaultOnTaskFail(params) {
+    const { error, taskId, taskInputData, promiseQueue } = params;
+    console.log(`❌📺 Failed parsing channel ${taskId}`);
+}

@@ -1,14 +1,8 @@
-import {ChannelParser, VideoParser, PromiseQueue} from "./src";
-import fs from "fs"
-import {parseYouTubeUrl, reAdjustYouTubeChannelId} from "./src/YouTubeUrl";
+import {parseYouTubeUrl} from "./src/YouTubeUrl";
+import {writeToFile} from "./src/utils";
+import * as VideoProcessingQueue from "./src/boilerplate/VideoProcessingQueue";
+import * as ChannelProcessingQueue from "./src/boilerplate/ChannelProcessingQueue";
 
-const writeToFile = (path: string, content: string) => {
-    // create folder if not exists
-    const folder = path.substring(0, path.lastIndexOf("/"));
-    if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-
-    fs.writeFileSync(path, content);
-}
 
 /*
  * ============================================================
@@ -22,60 +16,19 @@ const writeToFile = (path: string, content: string) => {
  */
 
 
-// ==================== instantiate Video Processing Queue ====================
-type VideoProcessingQueueInput = {videoId: string};     // Input data type for each of the processing task
-type VideoProcessingQueueOutPut = void;                 // Response data type
-const videoProcessingQueue = new PromiseQueue<VideoProcessingQueueInput, VideoProcessingQueueOutPut>();
-
-// ==================== instantiate Channel Processing Queue ====================
-type ChannelProcessingQueueInput = {channelId: string};
-type ChannelProcessingQueueOutPut = void;
-const channelProcessingQueue = new PromiseQueue<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>();
-
-// ==================== settings for Video Processing Queue ====================
-videoProcessingQueue.concurrency = 3; // number of tasks that can be in_progress at the same time. Before increasing this number, put in Proxy URL below
-videoProcessingQueue.onTaskStart = ({taskId}) => console.log(`➡️🎬 Started parsing video ${taskId}`);
-videoProcessingQueue.onTaskSuccess = ({taskId}) => console.log(`✅🎬 Completed parsing video ${taskId}`);
-videoProcessingQueue.onTaskFail = ({taskId}) => console.log(`❌🎬 Failed parsing video ${taskId}`);
-videoProcessingQueue.worker = async (value: VideoProcessingQueueInput): Promise<VideoProcessingQueueOutPut> => {
-    const { videoId } = value;
-
-    const videoParser = new VideoParser({
-        // proxyUrlGenerator: async () => { return "https://Your-Proxy-URL-HERE" },
-    });
-    await videoParser.load({videoId});
-
-    const channelId = videoParser.channelId;    // read out the channel id of this video
-    channelProcessingQueue.enqueue({            // parse info about this video's channel
-        taskData: {channelId},
-        taskId: channelId,
-        logTaskAddedWarning: true,              // this is just to demo that the same channel won't be parsed twice.
-    })
-
-    await videoParser.fetchTranscripts({languageLimit: 2}); // fetch the transcripts of this video. languageLimit: -1 => all, 0 => none, 1+ => the max amount you want
-
-    writeToFile(`./output/video_${videoParser.videoId}.json`, JSON.stringify(videoParser.toJSON(), null, 4))
-}
-
-// ==================== settings for Channel Processing Queue ====================
-channelProcessingQueue.concurrency = 2;       // number of tasks that can be in_progress at the same time
-channelProcessingQueue.onTaskStart = ({taskId}) => console.log(`➡️📺 Started parsing channel ${taskId}`);
-channelProcessingQueue.onTaskSuccess = ({taskId}) => console.log(`✅📺 Completed parsing channel ${taskId}`);
-channelProcessingQueue.onTaskFail = ({taskId}) => console.log(`❌📺 Failed parsing channel ${taskId}`);
-channelProcessingQueue.reAdjustTaskId = reAdjustYouTubeChannelId;
-channelProcessingQueue.worker = async (value: ChannelProcessingQueueInput): Promise<ChannelProcessingQueueOutPut> => {
-    const channelParser = new ChannelParser({
-        // proxyUrlGenerator: async () => { return "https://Your-Proxy-URL-HERE" },
-    });
-
-    let { channelId } = value;
-
-    await channelParser.load({channelId});
-    while (channelParser.hasMoreVideos() && channelParser.videos.length < 100) { // while there are more videos to fetch. Also, limit the fetch to 100 videos
-        await channelParser.fetchMoreVideos();
+const videoProcessingQueue = VideoProcessingQueue.make({
+    getChannelProcessingQueue: () => { return channelProcessingQueue },
+    onTaskSuccess: (data: VideoProcessingQueue.CallbackData) => {
+        const {taskResponse, taskId, taskInputData, promiseQueue} = data;
+        writeToFile(`./output/video_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4))
     }
-    writeToFile(`./output/channel_${channelParser.channelId}.json`, JSON.stringify(channelParser.toJSON(), null, 4));
-}
+});
+const channelProcessingQueue = ChannelProcessingQueue.make({
+    onTaskSuccess: (data: ChannelProcessingQueue.CallbackData) => {
+        const {taskResponse, taskId, taskInputData, promiseQueue} = data;
+        writeToFile(`./output/channel_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4))
+    }
+});
 
 
 // ==================== Start the Parsing Process ====================
@@ -94,18 +47,22 @@ const urls = [
 
 
 for(let url of urls) {
-    let {type, id, cleanedUrl} = parseYouTubeUrl(url);
+    const parseResult = parseYouTubeUrl(url);
+    if(parseResult === null) {
+        console.error(`The provided URL is not supported: "${url}"`)
+        continue;
+    }
+
+    let {type, id, cleanedUrl} = parseResult;
     if(type === "video") {
         videoProcessingQueue.enqueue({
-            taskData: {videoId: id},
+            taskInputData: {videoId: id},
             taskId: id,
-            logTaskAddedWarning: true, // this is just to demo that the same video won't be parsed twice. Feel free to remove or comment-out this line
         });
     } else if(type === "channel") {
         channelProcessingQueue.enqueue({
-            taskData: {channelId: id},
+            taskInputData: {channelId: id},
             taskId: id,
-            logTaskAddedWarning: true, // this is just to demo that the same channel won't be parsed twice. Feel free to remove or comment-out this line
         })
     }
 }
@@ -114,5 +71,3 @@ await videoProcessingQueue.allDone();
 await channelProcessingQueue.allDone();
 
 console.log("🎉 All Processing Done!\nCheck ./output folder for the results");
-
-
