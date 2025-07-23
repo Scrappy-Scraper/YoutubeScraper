@@ -1,5 +1,6 @@
 import {ChannelParser, VideoParser, PromiseQueue} from "./src";
 import fs from "fs"
+import {parseYouTubeUrl, reAdjustYouTubeChannelId} from "./src/YouTubeUrl";
 
 const writeToFile = (path: string, content: string) => {
     // create folder if not exists
@@ -33,9 +34,9 @@ const channelProcessingQueue = new PromiseQueue<ChannelProcessingQueueInput, Cha
 
 // ==================== settings for Video Processing Queue ====================
 videoProcessingQueue.concurrency = 3; // number of tasks that can be in_progress at the same time. Before increasing this number, put in Proxy URL below
-videoProcessingQueue.onTaskStart = ({taskId}) => console.log(`Started parsing video ${taskId}`);
-videoProcessingQueue.onTaskSuccess = ({taskId}) => console.log(`Completed parsing video ${taskId}`);
-videoProcessingQueue.onTaskFail = ({taskId}) => console.log(`Failed parsing video ${taskId}`);
+videoProcessingQueue.onTaskStart = ({taskId}) => console.log(`➡️🎬 Started parsing video ${taskId}`);
+videoProcessingQueue.onTaskSuccess = ({taskId}) => console.log(`✅🎬 Completed parsing video ${taskId}`);
+videoProcessingQueue.onTaskFail = ({taskId}) => console.log(`❌🎬 Failed parsing video ${taskId}`);
 videoProcessingQueue.worker = async (value: VideoProcessingQueueInput): Promise<VideoProcessingQueueOutPut> => {
     const { videoId } = value;
 
@@ -58,15 +59,16 @@ videoProcessingQueue.worker = async (value: VideoProcessingQueueInput): Promise<
 
 // ==================== settings for Channel Processing Queue ====================
 channelProcessingQueue.concurrency = 2;       // number of tasks that can be in_progress at the same time
-channelProcessingQueue.onTaskStart = ({taskId}) => console.log(`Started parsing channel ${taskId}`);
-channelProcessingQueue.onTaskSuccess = ({taskId}) => console.log(`Completed parsing channel ${taskId}`);
-channelProcessingQueue.onTaskFail = ({taskId}) => console.log(`Failed parsing channel ${taskId}`);
+channelProcessingQueue.onTaskStart = ({taskId}) => console.log(`➡️📺 Started parsing channel ${taskId}`);
+channelProcessingQueue.onTaskSuccess = ({taskId}) => console.log(`✅📺 Completed parsing channel ${taskId}`);
+channelProcessingQueue.onTaskFail = ({taskId}) => console.log(`❌📺 Failed parsing channel ${taskId}`);
+channelProcessingQueue.reAdjustTaskId = reAdjustYouTubeChannelId;
 channelProcessingQueue.worker = async (value: ChannelProcessingQueueInput): Promise<ChannelProcessingQueueOutPut> => {
     const channelParser = new ChannelParser({
         // proxyUrlGenerator: async () => { return "https://Your-Proxy-URL-HERE" },
     });
 
-    const { channelId } = value;
+    let { channelId } = value;
 
     await channelParser.load({channelId});
     while (channelParser.hasMoreVideos() && channelParser.videos.length < 100) { // while there are more videos to fetch. Also, limit the fetch to 100 videos
@@ -76,19 +78,41 @@ channelProcessingQueue.worker = async (value: ChannelProcessingQueueInput): Prom
 }
 
 
-// ==================== Start the Video Parsing Process ====================
-const idsOfVideosToParse = ["dQw4w9WgXcQ", "Y39LE5ZoKjw", "Y39LE5ZoKjw", "BeyEGebJ1l4", "C2xel6q0yao", "u_Lxkt50xOg"]; // Notice the repeat of the second one
-for(const videoId of idsOfVideosToParse) {
-    videoProcessingQueue.enqueue({
-        taskData: {videoId},
-        taskId: videoId,
-        logTaskAddedWarning: true, // this is just to demo that the same video won't be parsed twice. Feel free to remove or comment-out this line
-    });
+// ==================== Start the Parsing Process ====================
+const urls = [
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "https://www.youtube.com/watch?v=Y39LE5ZoKjw",
+    "https://www.youtube.com/watch?v=Y39LE5ZoKjwa", // a broken video url; it's here for testing purpose
+    "https://www.youtube.com/watch?v=BeyEGebJ1l4",
+    "https://www.youtube.com/watch?v=C2xel6q0yao",
+    "https://www.youtube.com/watch?v=u_Lxkt50xOg",
+    "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw",
+    "https://www.youtube.com/@PewDiePie",
+    "https://www.youtube.com/@MrBeast",
+];
+
+
+
+for(let url of urls) {
+    let {type, id, cleanedUrl} = parseYouTubeUrl(url);
+    if(type === "video") {
+        videoProcessingQueue.enqueue({
+            taskData: {videoId: id},
+            taskId: id,
+            logTaskAddedWarning: true, // this is just to demo that the same video won't be parsed twice. Feel free to remove or comment-out this line
+        });
+    } else if(type === "channel") {
+        channelProcessingQueue.enqueue({
+            taskData: {channelId: id},
+            taskId: id,
+            logTaskAddedWarning: true, // this is just to demo that the same channel won't be parsed twice. Feel free to remove or comment-out this line
+        })
+    }
 }
 
 await videoProcessingQueue.allDone();
 await channelProcessingQueue.allDone();
 
-console.log("All Processing Done!\nCheck ./output folder for the results");
+console.log("🎉 All Processing Done!\nCheck ./output folder for the results");
 
 

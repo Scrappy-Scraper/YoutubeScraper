@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { md5 } from 'js-md5';
 import { DOMParser } from 'xmldom';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import {reAdjustYouTubeChannelId} from "./YouTubeUrl.js";
 
 const languageByPopularity = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'ja', 'ko', 'th', 'ru'];
 const sleepAsync = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -230,8 +231,9 @@ export class ChannelParser {
     }
 
     async load(params: { channelId: string }) {
-        if (this._channelId !== null) throw new Error('Channel is already loaded');
-        const baseUrl = `https://www.youtube.com/channel/${params.channelId}`;
+        if (this._channelId !== null) return; // channel already loaded
+        const channelId = reAdjustYouTubeChannelId(params.channelId);
+        let baseUrl: string = `https://www.youtube.com/${channelId}`;
 
         const url = `${baseUrl}/videos?view=0&flow=grid&ucbcb=1`;
 
@@ -273,7 +275,7 @@ export class ChannelParser {
         }
         this._nextPageAccessData = ChannelParser.getNextPageAccessData(pageData);
 
-        return Array.from(this._videos.values());
+        this._channelId = this._metadata.id;
     }
 
     async fetchMoreVideos() {
@@ -615,6 +617,7 @@ export class PromiseQueue<TaskInputData, TaskResponseData> {
     private _concurrency: number = 3; // number of tasks that can be in-progress at the same time
     get concurrency() { return this._concurrency; }
     set concurrency(value: number) { this._concurrency = Math.max(1, value); }
+    reAdjustTaskId: (id: string) => string = ((id: string) => id)
 
     // worker is the function that process the data
     set worker(value: ((taskData: TaskInputData, taskId: string) => Promise<TaskResponseData>)) {
@@ -623,23 +626,28 @@ export class PromiseQueue<TaskInputData, TaskResponseData> {
 
     private _queue: Map<string, TaskInputData> = new Map<string, TaskInputData>(); // {taskId: taskData} // tasks to be taken
     private _inProgressTaskDataSet: Map<string, TaskInputData> = new Map<string, TaskInputData>(); // {taskId: taskData} // tasks in-progress
-    private _succeededTaskIds: Set<string> = new Set<string>();     // ids of tasks that are done and succeeded
-    private _failedTaskIds: Set<string> = new Set<string>();        // ids of tasks that are done and failed
+    private _succeededTaskIds: Map<string, number> = new Map<string, number>();     // ids of tasks that are done and succeeded. The key is the task id and val is the added time in Unix Epoch seconds
+    private _successIdsExpiry: number = 10 * 60; // time in seconds
+    private _failedTaskIds: Map<string, number> = new Map<string, number>();        // ids of tasks that are done and failed. The key is the task id and val is the added time in Unix Epoch seconds
+    private _failureIdsExpiry: number = 10 * 60; // time in seconds
     get _allTaskIds(): Set<string> { // set of all task ids ever added
         return new Set([
             ...this._queue.keys(),
             ...this._inProgressTaskDataSet.keys(),
-            ...this._succeededTaskIds,
-            ...this._failedTaskIds,
+            ...this._succeededTaskIds.keys(),
+            ...this._failedTaskIds.keys(),
         ]);
+    }
+    private _isIdOnRecord(id: string): boolean {
+        return this._queue.has(id) || this._inProgressTaskDataSet.has(id) || this._succeededTaskIds.has(id) || this._failedTaskIds.has(id);
     }
 
     get stats() {
         return {
             pending: Array.from(this._queue.keys()),
             inProgress: Array.from(this._inProgressTaskDataSet.keys()),
-            succeeded: Array.from(this._succeededTaskIds),
-            failed: Array.from(this._failedTaskIds),
+            succeeded: Array.from(this._succeededTaskIds.keys()),
+            failed: Array.from(this._failedTaskIds.keys()),
         }
     }
 
@@ -664,16 +672,22 @@ export class PromiseQueue<TaskInputData, TaskResponseData> {
         taskId: string;
         logTaskAddedWarning?: boolean;
     }): void {
-        const { taskData, taskId, logTaskAddedWarning = false } = params;
+        let { taskData, taskId, logTaskAddedWarning = false } = params;
         if((taskId ?? null) === null) throw new Error(`taskId is required`);
+        taskId = this.reAdjustTaskId(taskId);
 
         // if added previously, don't add
-        if(this._allTaskIds.has(taskId)) {
+        let isIdOnRecord = this._isIdOnRecord(taskId);
+        if(isIdOnRecord) { // if the id is on the record
+            this._removeExpiredHistoryIds(); // remove all the expired ids
+            isIdOnRecord = this._isIdOnRecord(taskId); // check again
+        }
+        if(isIdOnRecord) {
             if(!logTaskAddedWarning) return;
-            if(this._queue.has(taskId)) console.warn(`Task with id ${taskId} already exists in the queue, so it's not added again`);
-            if(this._inProgressTaskDataSet.has(taskId)) console.warn(`Task with id ${taskId} is already in progress, so it's not added again`);
-            if(this._succeededTaskIds.has(taskId)) console.warn(`Task with id ${taskId} had already been worked on, so it's not added again. That task succeeded`);
-            if(this._failedTaskIds.has(taskId)) console.warn(`Task with id ${taskId} had already been worked on, so it's not added again. That task failed`);
+            if(this._queue.has(taskId)) console.warn(`⏭️ Task with id ${taskId} already exists in the queue, so it's not added again`);
+            if(this._inProgressTaskDataSet.has(taskId)) console.warn(`⏭️ Task with id ${taskId} is already in progress, so it's not added again`);
+            if(this._succeededTaskIds.has(taskId)) console.warn(`⏭️ Task with id ${taskId} had already been worked on, so it's not added again. That task succeeded`);
+            if(this._failedTaskIds.has(taskId)) console.warn(`⏭️ Task with id ${taskId} had already been worked on, so it's not added again. That task failed`);
             return;
         }
 
@@ -710,23 +724,31 @@ export class PromiseQueue<TaskInputData, TaskResponseData> {
             const baseCallbackData = { taskData, taskId, promiseQueue: this };
             this.onTaskStart(baseCallbackData);
 
-            const workerTask = this._makeWorkerTask(taskData, taskId); // create the task worker
-            workerTask.then((result: TaskResponseData) => {     // if the task is successful
-                this._succeededTaskIds.add(taskId);               // record it as succeeded
-                this.onTaskSuccess({ taskResponse: result, ...baseCallbackData }); // call the callback function
-            });
-            workerTask.catch((error: any) => {
-                this._failedTaskIds.add(taskId);                  // record it as failed
-                this.onTaskFail({ error, ...baseCallbackData });  // call the callback function
-            });
-            workerTask.finally(() => {                      // when done, no matter pass or fail...
+            (async () => {
+                let responseData: TaskResponseData;
+                try {
+                    responseData = await this._makeWorkerTask!(taskData, taskId); // create the task worker
+                    this._succeededTaskIds.set(taskId, (new Date).getTime() / 1000);               // record it as succeeded
+                    this.onTaskSuccess({ taskResponse: responseData, ...baseCallbackData }); // call the callback function
+                } catch (error) {
+                    this._failedTaskIds.set(taskId, (new Date).getTime() / 1000);                  // record it as failed
+                    this.onTaskFail({ error, ...baseCallbackData });  // call the callback function
+                }
                 this._inProgressTaskDataSet.delete(taskId);       // remove from list of in_progress tasks
                 this._deployWorkers();                            // put remaining queued tasks to in_progress
-            });
+            })()
         }
     }
 
-
+    private _removeExpiredHistoryIds(): void {
+        const now = (new Date).getTime() / 1000;
+        for(const [id, addedTime] of this._succeededTaskIds) {
+            if(now - addedTime > this._successIdsExpiry) this._succeededTaskIds.delete(id);
+        }
+        for(const [id, addedTime] of this._failedTaskIds) {
+            if(now - addedTime > this._failureIdsExpiry) this._failedTaskIds.delete(id);
+        }
+    }
 }
 
 type BasePromiseQueueCallbackData<TaskInputData, TaskResponseData> = {

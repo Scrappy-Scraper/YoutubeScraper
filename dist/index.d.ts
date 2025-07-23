@@ -65,11 +65,7 @@ export declare class ChannelParser {
     });
     load(params: {
         channelId: string;
-    }): Promise<{
-        videoId: string;
-        thumbnail: string;
-        title: string;
-    }[]>;
+    }): Promise<void>;
     fetchMoreVideos(): Promise<ListVideoInfo[]>;
     hasMoreVideos(): boolean;
     toJSON(): {
@@ -120,12 +116,16 @@ export declare class PromiseQueue<TaskInputData, TaskResponseData> {
     private _concurrency;
     get concurrency(): number;
     set concurrency(value: number);
+    reAdjustTaskId: (id: string) => string;
     set worker(value: ((taskData: TaskInputData, taskId: string) => Promise<TaskResponseData>));
     private _queue;
     private _inProgressTaskDataSet;
     private _succeededTaskIds;
+    private _successIdsExpiry;
     private _failedTaskIds;
+    private _failureIdsExpiry;
     get _allTaskIds(): Set<string>;
+    private _isIdOnRecord;
     get stats(): {
         pending: string[];
         inProgress: string[];
@@ -148,6 +148,7 @@ export declare class PromiseQueue<TaskInputData, TaskResponseData> {
     }): void;
     private _dequeue;
     private _deployWorkers;
+    private _removeExpiredHistoryIds;
 }
 type BasePromiseQueueCallbackData<TaskInputData, TaskResponseData> = {
     taskData: TaskInputData;
