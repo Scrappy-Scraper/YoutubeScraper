@@ -1,19 +1,20 @@
 import PromiseQueue from "../PromiseQueue.js";
 import VideoParser from "../VideoParser.js";
 export function make(params) {
-    const { concurrency = 3, transcriptLanguageLimit = 2, onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, } = params;
+    const { concurrency = 3, transcriptLanguageLimit = 2, onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, shouldLogTaskAlreadyAddedWarning = false, } = params;
     const videoProcessingQueue = new PromiseQueue();
     videoProcessingQueue.concurrency = concurrency;
     videoProcessingQueue.onTaskStart = onTaskStart;
     videoProcessingQueue.onTaskSuccess = onTaskSuccess;
     videoProcessingQueue.onTaskFail = onTaskFail;
+    videoProcessingQueue.shouldLogTaskAlreadyAddedWarning = shouldLogTaskAlreadyAddedWarning;
     videoProcessingQueue.worker = async (value) => {
         const { videoId } = value;
         const videoParser = new VideoParser({ proxyUrlGenerator });
         await videoParser.load({ videoId });
         const channelId = videoParser.channelId; // read out the channel id of this video
         if (params.getChannelProcessingQueue) {
-            params.getChannelProcessingQueue().enqueue({
+            await params.getChannelProcessingQueue().enqueue({
                 taskInputData: { channelId },
                 taskId: channelId,
             });

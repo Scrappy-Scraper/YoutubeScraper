@@ -1,4 +1,4 @@
-import PromiseQueue, { BasePromiseQueueCallbackData } from "../PromiseQueue.js";
+import PromiseQueue, { BasePromiseQueueCallbackData, InputParam_OnTaskSuccess as Input_OnTaskSuccess, InputParam_OnTaskFail as Input_OnTaskFail } from "../PromiseQueue.js";
 import { Transcript } from "../VideoParser.js";
 type VideoProcessingQueueInput = {
     videoId: string;
@@ -26,15 +26,12 @@ export declare function make(params: {
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
     getChannelProcessingQueue?: () => PromiseQueue<any, any>;
     proxyUrlGenerator?: () => Promise<string>;
+    shouldLogTaskAlreadyAddedWarning?: boolean;
 }): PromiseQueue<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export type InputParams_OnTaskStart = BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export declare function defaultOnTaskStart(params: InputParams_OnTaskStart): void;
-export type InputParams_OnTaskSuccess = {
-    taskResponse: VideoProcessingQueueOutPut;
-} & BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
+export type InputParams_OnTaskSuccess = Input_OnTaskSuccess<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export declare function defaultOnTaskSuccess(params: InputParams_OnTaskSuccess): void;
-export type InputParams_OnTaskFail = {
-    error: any;
-} & BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
+export type InputParams_OnTaskFail = Input_OnTaskFail<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export declare function defaultOnTaskFail(params: InputParams_OnTaskFail): void;
 export {};

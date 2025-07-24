@@ -2,12 +2,13 @@ import PromiseQueue from "../PromiseQueue.js";
 import { reAdjustYouTubeChannelId } from "../YouTubeUrl.js";
 import ChannelParser from "../ChannelParser.js";
 export function make(params) {
-    const { concurrency = 2, onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, numVideos = 100, } = params;
+    const { concurrency = 2, onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, numVideos = 100, shouldLogTaskAlreadyAddedWarning = false, } = params;
     const channelProcessingQueue = new PromiseQueue();
     channelProcessingQueue.concurrency = concurrency; // number of tasks that can be in_progress at the same time
     channelProcessingQueue.onTaskStart = onTaskStart;
     channelProcessingQueue.onTaskSuccess = onTaskSuccess;
     channelProcessingQueue.onTaskFail = onTaskFail;
+    channelProcessingQueue.shouldLogTaskAlreadyAddedWarning = shouldLogTaskAlreadyAddedWarning;
     channelProcessingQueue.reAdjustTaskId = reAdjustYouTubeChannelId;
     channelProcessingQueue.worker = async (value) => {
         let { channelId } = value;

@@ -26,6 +26,7 @@ export declare function make(params: {
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
     proxyUrlGenerator?: () => Promise<string>;
     numVideos?: number;
+    shouldLogTaskAlreadyAddedWarning?: boolean;
 }): PromiseQueue<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>;
 export type InputParams_OnTaskStart = BasePromiseQueueCallbackData<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>;
 export declare function defaultOnTaskStart(params: InputParams_OnTaskStart): void;
