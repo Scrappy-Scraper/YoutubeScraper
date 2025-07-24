@@ -1,4 +1,8 @@
-import PromiseQueue, {BasePromiseQueueCallbackData} from "../PromiseQueue.js";
+import PromiseQueue, {
+    BasePromiseQueueCallbackData,
+    InputParam_OnTaskSuccess as Input_OnTaskSuccess,
+    InputParam_OnTaskFail as Input_OnTaskFail,
+} from "../PromiseQueue.js";
 import VideoParser, {Transcript} from "../VideoParser.js";
 
 type VideoProcessingQueueInput = {videoId: string};     // Input data type for each of the processing task
@@ -23,6 +27,7 @@ export function make(params: {
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
     getChannelProcessingQueue?: () => PromiseQueue<any, any>;
     proxyUrlGenerator?: () => Promise<string>;
+    shouldLogTaskAlreadyAddedWarning?: boolean;
 }) {
     const {
         concurrency = 3,
@@ -31,6 +36,7 @@ export function make(params: {
         onTaskSuccess = defaultOnTaskSuccess,
         onTaskFail = defaultOnTaskFail,
         proxyUrlGenerator,
+        shouldLogTaskAlreadyAddedWarning = false,
     } = params;
     const videoProcessingQueue = new PromiseQueue<VideoProcessingQueueInput, VideoProcessingQueueOutPut>();
 
@@ -38,6 +44,7 @@ export function make(params: {
     videoProcessingQueue.onTaskStart = onTaskStart;
     videoProcessingQueue.onTaskSuccess = onTaskSuccess;
     videoProcessingQueue.onTaskFail = onTaskFail;
+    videoProcessingQueue.shouldLogTaskAlreadyAddedWarning = shouldLogTaskAlreadyAddedWarning;
     videoProcessingQueue.worker = async (value: VideoProcessingQueueInput): Promise<VideoProcessingQueueOutPut> => {
         const { videoId } = value;
 
@@ -66,13 +73,13 @@ export function defaultOnTaskStart(params: InputParams_OnTaskStart) {
     console.log(`➡️🎬 Started parsing video ${taskId}`);
 }
 
-export type InputParams_OnTaskSuccess = { taskResponse: VideoProcessingQueueOutPut } & BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
+export type InputParams_OnTaskSuccess = Input_OnTaskSuccess<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export function defaultOnTaskSuccess(params: InputParams_OnTaskSuccess) {
     const {taskResponse, taskId, taskInputData, promiseQueue} = params;
     console.log(`✅🎬 Completed parsing video ${taskId}`);
 }
 
-export type InputParams_OnTaskFail = { error: any } & BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
+export type InputParams_OnTaskFail = Input_OnTaskFail<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export function defaultOnTaskFail(params: InputParams_OnTaskFail) {
     const {error, taskId, taskInputData, promiseQueue} = params;
     console.error(`❌🎬 Failed parsing video ${taskId}`, error);

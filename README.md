@@ -13,7 +13,67 @@ yarn add @scrappy-scraper/youtube_scraper       # yarn
 Works in `Node.js` and `browsers`
 
 ## Sample Code
+### Queued Sample
+```aiignore
+import { VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl } from '@scrappy-scraper/youtube_scraper';
 
+const proxyUrlGenerator = () => { return "https://Your-Proxy-URL-HERE"; }
+
+const videoProcessingQueue = VideoProcessingQueue.make({
+    proxyUrlGenerator,
+    getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel
+    onTaskSuccess: (data: VideoProcessingQueue.CallbackData) => {
+        const {taskResponse, taskId, taskInputData, promiseQueue} = data;
+        console.log(JSON.stringify(taskResponse, null, 4));
+    }
+});
+const channelProcessingQueue = ChannelProcessingQueue.make({
+    proxyUrlGenerator,
+    onTaskSuccess: (data: ChannelProcessingQueue.CallbackData) => {
+        const {taskResponse, taskId, taskInputData, promiseQueue} = data;
+        console.log(JSON.stringify(taskResponse, null, 4));
+    }
+});
+
+const urls = [
+    // videos
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "https://www.youtube.com/watch?v=Y39LE5ZoKjw",
+    // channels
+    "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw",
+    "https://www.youtube.com/@PewDiePie",
+    "https://www.youtube.com/@MrBeast",
+];
+
+
+
+for(let url of urls) {
+    const parseResult = YouTubeUrl.parseYouTubeUrl(url);
+    if(parseResult === null) {
+        console.error(`The provided URL is not supported: "${url}"`)
+        continue;
+    }
+
+    let {type, id, cleanedUrl} = parseResult;
+    if(type === "video") {
+        await videoProcessingQueue.enqueue({
+            taskInputData: {videoId: id},
+            taskId: id,
+        });
+    } else if(type === "channel") {
+        await channelProcessingQueue.enqueue({
+            taskInputData: {channelId: id},
+            taskId: id,
+        })
+    }
+}
+
+await videoProcessingQueue.allDone();
+await channelProcessingQueue.allDone();
+
+```
+
+### Low-Level Sample
 ```aiignore
 import { ChannelParser, VideoParser } from '@scrappy-scraper/youtube_scraper';
 

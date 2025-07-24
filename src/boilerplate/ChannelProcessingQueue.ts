@@ -21,6 +21,7 @@ export function make(params: {
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
     proxyUrlGenerator?: () => Promise<string>;
     numVideos?: number;
+    shouldLogTaskAlreadyAddedWarning?: boolean;
 }) {
     const {
         concurrency = 2,
@@ -29,6 +30,7 @@ export function make(params: {
         onTaskFail = defaultOnTaskFail,
         proxyUrlGenerator,
         numVideos = 100,
+        shouldLogTaskAlreadyAddedWarning = false,
     } = params;
     const channelProcessingQueue = new PromiseQueue<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>();
 
@@ -36,6 +38,7 @@ export function make(params: {
     channelProcessingQueue.onTaskStart = onTaskStart;
     channelProcessingQueue.onTaskSuccess = onTaskSuccess;
     channelProcessingQueue.onTaskFail = onTaskFail;
+    channelProcessingQueue.shouldLogTaskAlreadyAddedWarning = shouldLogTaskAlreadyAddedWarning;
     channelProcessingQueue.reAdjustTaskId = reAdjustYouTubeChannelId;
     channelProcessingQueue.worker = async (value: ChannelProcessingQueueInput): Promise<ChannelProcessingQueueOutPut> => {
         let { channelId } = value;
