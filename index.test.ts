@@ -14,6 +14,7 @@ import {VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl, Utils} from ".
 // const proxyUrlGenerator = () => { return "https://Your-Proxy-URL-HERE"; }
 
 const videoProcessingQueue = VideoProcessingQueue.make({
+    concurrency: 3,
     getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel
     // proxyUrlGenerator,
     shouldLogTaskAlreadyAddedWarning: true,
@@ -24,6 +25,7 @@ const videoProcessingQueue = VideoProcessingQueue.make({
     }
 });
 const channelProcessingQueue = ChannelProcessingQueue.make({
+    concurrency: 3,
     // proxyUrlGenerator,
     shouldLogTaskAlreadyAddedWarning: true,
     onTaskSuccess: (data: ChannelProcessingQueue.CallbackData) => {
