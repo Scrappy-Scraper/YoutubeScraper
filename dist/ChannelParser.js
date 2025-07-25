@@ -113,11 +113,11 @@ export default class ChannelParser {
         const urlGenerator = this._proxyUrlGenerator ?? null;
         if (urls.length === 0 && urlGenerator === null)
             return undefined; // no usable url
+        const sId = sessionId ?? md5((Math.random() * 10 ** 6).toString()); // generate a session id if not provided
         if (urlGenerator)
-            return await urlGenerator(sessionId); // use the generator, if provided
+            return await urlGenerator(sId); // use the generator, if provided
         // use the array of urls. Each url could be a template containing ':sessionId' to be replaced
         const selectedTemplate = this._proxyUrls[Math.floor(Math.random() * this._proxyUrls.length)]; // randomly pick one from the array
-        const sId = sessionId ?? md5((Math.random() * 10 ** 6).toString()); // generate a session id if not provided
         return selectedTemplate.replace(':sessionId', sId); // fill in the ':sessionId'
     }
     static parseVideoData(data) {

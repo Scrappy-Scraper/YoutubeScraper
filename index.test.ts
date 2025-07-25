@@ -1,4 +1,4 @@
-import {VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl, Utils} from "./src";
+import {ChannelProcessingQueue, Utils, VideoProcessingQueue, YouTubeUrl} from "./src";
 
 /*
  * ============================================================
@@ -11,13 +11,20 @@ import {VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl, Utils} from ".
  * For simpler code example, refer to the one in README.md
  */
 
-// const proxyUrlGenerator = () => { return "https://Your-Proxy-URL-HERE"; }
+/*
+const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<string> => {
+    return "http://username:password@host:port"
+        .replace(":sessionId", sessionId || Math.round(Math.random() * 10**6).toString());
+}
+*/
 
 const videoProcessingQueue = VideoProcessingQueue.make({
     concurrency: 3,
     getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel
-    // proxyUrlGenerator,
+    // proxyUrlGenerator, // TODO: Un-comment this line when you have filled-in the proxy url above
     shouldLogTaskAlreadyAddedWarning: true,
+    // transcriptLanguageLimit: 3,
+    // preferredLanguages: ["en", "es", "zh"],
     onTaskSuccess: (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         Utils.writeToFile(`./output/video_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
@@ -26,7 +33,7 @@ const videoProcessingQueue = VideoProcessingQueue.make({
 });
 const channelProcessingQueue = ChannelProcessingQueue.make({
     concurrency: 3,
-    // proxyUrlGenerator,
+    // proxyUrlGenerator, // TODO: Un-comment this line when you have filled-in the proxy url above
     shouldLogTaskAlreadyAddedWarning: true,
     onTaskSuccess: (data: ChannelProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
@@ -80,4 +87,4 @@ for(let url of urls) {
 await videoProcessingQueue.allDone();
 await channelProcessingQueue.allDone();
 
-console.log("🎉 All Processing Done!\nCheck ./output folder for the results");
+console.log("\n🎉 All Processing Done!\nCheck ./output folder for the results");

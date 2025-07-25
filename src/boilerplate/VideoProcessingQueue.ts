@@ -22,16 +22,18 @@ export type CallbackData = {taskResponse: VideoProcessingQueueOutPut} & BaseProm
 export function make(params: {
     concurrency?: number; // number of tasks that can be in_progress at the same time. Before increasing this number, put in Proxy URL below
     transcriptLanguageLimit?: number; // -1 => all, 0 => none, 1+ => the max amount you want
+    preferredLanguages?: string[];
     onTaskStart?: (params: InputParams_OnTaskStart) => void;
     onTaskSuccess?: (params: InputParams_OnTaskSuccess) => void;
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
     getChannelProcessingQueue?: () => PromiseQueue<any, any>;
-    proxyUrlGenerator?: () => Promise<string>;
+    proxyUrlGenerator?: (sessionId?: string|null|undefined) => Promise<string>;
     shouldLogTaskAlreadyAddedWarning?: boolean;
 }) {
     const {
         concurrency = 3,
         transcriptLanguageLimit = 2,
+        preferredLanguages = [],
         onTaskStart = defaultOnTaskStart,
         onTaskSuccess = defaultOnTaskSuccess,
         onTaskFail = defaultOnTaskFail,
@@ -59,7 +61,7 @@ export function make(params: {
             });
         }
 
-        await videoParser.fetchTranscripts({languageLimit: transcriptLanguageLimit});
+        await videoParser.fetchTranscripts({languageLimit: transcriptLanguageLimit, preferredLanguages});
 
         return videoParser.toJSON();
     }

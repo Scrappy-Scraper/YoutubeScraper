@@ -26,6 +26,7 @@ export default class VideoParser {
     }>;
     fetchTranscripts(params: {
         languageLimit?: number;
+        preferredLanguages?: string[];
     }): Promise<Transcript[]>;
     toJSON(): {
         id: string;

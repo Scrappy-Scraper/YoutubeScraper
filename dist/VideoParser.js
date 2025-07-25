@@ -69,25 +69,31 @@ export default class VideoParser {
         try {
             // Get transcript data from YouTube API
             const tracksData = metadata.captions?.playerCaptionsTracklistRenderer ?? [];
+            // a list of available languages
             const availableLanguages = new Set(tracksData.captionTracks.map((track) => track.languageCode.split('-')[0]));
+            // preferred languages
+            let preferredLanguages = new Set(params.preferredLanguages ?? []);
+            languageByPopularity.forEach((lang) => { preferredLanguages.add(lang); });
+            // select languages based on preference and what's available
             const selectedLanguageCodes = new Set();
-            for (let lang of languageByPopularity) {
+            for (let lang of Array.from(preferredLanguages)) {
                 if (availableLanguages.has(lang))
                     selectedLanguageCodes.add(lang); // from available languages, add the most popular languages into selected language
             }
+            // add the remainder of languages
             availableLanguages.forEach((languageCode) => {
                 selectedLanguageCodes.add(languageCode);
-            }); // add the remainder of languages
+            });
             // Parse and fetch all available transcripts
             const transcripts = [];
             const captionTracks = tracksData.captionTracks || [];
-            const selectedLangCodes = new Set(Array.from(selectedLanguageCodes).slice(0, languageLimit));
-            const filteringByLanguage = selectedLangCodes.size > 0;
+            const langCodesToFetch = new Set(Array.from(selectedLanguageCodes).slice(0, languageLimit));
+            const filteringByLanguage = langCodesToFetch.size > 0;
             const fetchTasks = captionTracks.map((track) => {
                 return (async () => {
                     try {
                         const trackLanguagePrimaryCode = track.languageCode.split('-')[0];
-                        if (filteringByLanguage && !selectedLangCodes.has(trackLanguagePrimaryCode))
+                        if (filteringByLanguage && !langCodesToFetch.has(trackLanguagePrimaryCode))
                             return;
                         const transcriptUrl = track.baseUrl.replace('&fmt=srv3', '');
                         const makeRequest = async () => {
@@ -138,11 +144,11 @@ export default class VideoParser {
         const urlGenerator = this._proxyUrlGenerator ?? null;
         if (urls.length === 0 && urlGenerator === null)
             return undefined; // no usable url
+        const sId = sessionId ?? md5((Math.random() * 10 ** 6).toString()); // generate a session id if not provided
         if (urlGenerator)
-            return await urlGenerator(sessionId); // use the generator, if provided
+            return await urlGenerator(sId); // use the generator, if provided
         // use the array of urls. Each url could be a template containing ':sessionId' to be replaced
         const selectedTemplate = this._proxyUrls[Math.floor(Math.random() * this._proxyUrls.length)]; // randomly pick one from the array
-        const sId = sessionId ?? md5((Math.random() * 10 ** 6).toString()); // generate a session id if not provided
         return selectedTemplate.replace(':sessionId', sId); // fill in the ':sessionId'
     }
     async fetchVideoHtml(videoId) {

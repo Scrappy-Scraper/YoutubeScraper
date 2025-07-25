@@ -1,7 +1,7 @@
 import PromiseQueue from "../PromiseQueue.js";
 import VideoParser from "../VideoParser.js";
 export function make(params) {
-    const { concurrency = 3, transcriptLanguageLimit = 2, onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, shouldLogTaskAlreadyAddedWarning = false, } = params;
+    const { concurrency = 3, transcriptLanguageLimit = 2, preferredLanguages = [], onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, shouldLogTaskAlreadyAddedWarning = false, } = params;
     const videoProcessingQueue = new PromiseQueue();
     videoProcessingQueue.concurrency = concurrency;
     videoProcessingQueue.onTaskStart = onTaskStart;
@@ -19,7 +19,7 @@ export function make(params) {
                 taskId: channelId,
             });
         }
-        await videoParser.fetchTranscripts({ languageLimit: transcriptLanguageLimit });
+        await videoParser.fetchTranscripts({ languageLimit: transcriptLanguageLimit, preferredLanguages });
         return videoParser.toJSON();
     };
     return videoProcessingQueue;

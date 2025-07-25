@@ -21,11 +21,12 @@ export type CallbackData = {
 export declare function make(params: {
     concurrency?: number;
     transcriptLanguageLimit?: number;
+    preferredLanguages?: string[];
     onTaskStart?: (params: InputParams_OnTaskStart) => void;
     onTaskSuccess?: (params: InputParams_OnTaskSuccess) => void;
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
     getChannelProcessingQueue?: () => PromiseQueue<any, any>;
-    proxyUrlGenerator?: () => Promise<string>;
+    proxyUrlGenerator?: (sessionId?: string | null | undefined) => Promise<string>;
     shouldLogTaskAlreadyAddedWarning?: boolean;
 }): PromiseQueue<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export type InputParams_OnTaskStart = BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;

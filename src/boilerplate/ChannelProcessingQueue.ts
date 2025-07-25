@@ -19,7 +19,7 @@ export function make(params: {
     onTaskStart?: (params: InputParams_OnTaskStart) => void;
     onTaskSuccess?: (params: InputParams_OnTaskSuccess) => void;
     onTaskFail?: (params: InputParams_OnTaskFail) => void;
-    proxyUrlGenerator?: () => Promise<string>;
+    proxyUrlGenerator?: (sessionId?: string|null|undefined) => Promise<string>;
     numVideos?: number;
     shouldLogTaskAlreadyAddedWarning?: boolean;
 }) {

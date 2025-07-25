@@ -17,28 +17,29 @@ If you want to make modification and test it, look for the test file `index.test
 The main code is in `src/index.ts`
 
 ### To Build
-```aiignore
+```shell
 npm run build       # npm
 yarn run build      # yarn
 ```
 ### To Test Run
-```aiignore
+```shell
 npm run test       # npm
 yarn run test      # yarn
 ```
 
 ## Sample Code
 ### Simple Sample
-```aiignore
+```typescript
 import { ChannelParser, VideoParser } from '@scrappy-scraper/youtube_scraper';
 
+const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<string> => {
+    return "http://username:password@host:port"
+        .replace(":sessionId", sessionId || Math.round(Math.random() * 10**6).toString());
+}
+
 // instantiate parsers
-const videoParser = new VideoParser({
-    // proxyUrlGenerator: async () => { return "https://Your-Proxy-URL-HERE" },
-});
-const channelParser = new ChannelParser({
-    // proxyUrlGenerator: async () => { return "https://Your-Proxy-URL-HERE" },
-});
+const videoParser = new VideoParser({ /* proxyUrlGenerator */ });
+const channelParser = new ChannelParser({ /* proxyUrlGenerator */ });
 
 // parse video
 await videoParser.load({videoId: "dQw4w9WgXcQ"});
@@ -59,15 +60,20 @@ console.log(JSON.stringify(channelParser.toJSON()))
 ### Queued Sample
 This is the recommended way to run the parsers.
 Queuing helps avoid huge number of concurrent requests; this prevents over-burdening the network or getting the IP address banned.
-```aiignore
+```typescript
 import { VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl } from '@scrappy-scraper/youtube_scraper';
 
-const proxyUrlGenerator = () => { return "https://Your-Proxy-URL-HERE"; }
+const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<string> => {
+    return "http://username:password@host:port"
+        .replace(":sessionId", sessionId || Math.round(Math.random() * 10**6).toString());
+}
 
 const videoProcessingQueue = VideoProcessingQueue.make({
     concurrency: 3,
     proxyUrlGenerator,
     getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel that this video belongs to
+    // transcriptLanguageLimit: 3,
+    // preferredLanguages: ["en", "es", "zh"],
     onTaskSuccess: (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         console.log(JSON.stringify(taskResponse, null, 4));
