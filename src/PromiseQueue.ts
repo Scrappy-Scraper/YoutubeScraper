@@ -15,9 +15,9 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
     private _makeWorkerTask: ((taskInputData: TaskInputData, taskId: string) => Promise<TaskResponseData>) | null = null;
 
     // callback functions
-    public onTaskSuccess: ((params: InputParam_OnTaskSuccess<TaskInputData, TaskResponseData>) => void) = (() => { /* Default to empty function */ })
-    public onTaskFail: ((params: InputParam_OnTaskFail<TaskInputData, TaskResponseData>) => void) = (() => { /* Default to empty function */ })
-    public onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void) = (() => { /* Default to empty function */ })
+    public onTaskSuccess: ((params: InputParam_OnTaskSuccess<TaskInputData, TaskResponseData>) => Promise<void>) = (async () => { /* Default to empty function */ })
+    public onTaskFail: ((params: InputParam_OnTaskFail<TaskInputData, TaskResponseData>) => Promise<void>) = (async () => { /* Default to empty function */ })
+    public onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => Promise<void>) = (async () => { /* Default to empty function */ })
 
     // task manager
     protected _taskManager: AbstractTaskManager<TaskInputData>;
@@ -58,16 +58,16 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
 
             // callbacks
             const baseCallbackData = {taskInputData, taskId, promiseQueue: this};
-            this.onTaskStart(baseCallbackData);
+            await this.onTaskStart(baseCallbackData);
 
             (async () => {
                 try {
                     let responseData: TaskResponseData = await this._makeWorkerTask!(taskInputData, taskId); // create the task and wait for result
                     await taskManager.addTaskToSucceeded(taskId); // record it as succeeded
-                    this.onTaskSuccess({taskResponse: responseData, ...baseCallbackData}); // call the callback function
+                    await this.onTaskSuccess({taskResponse: responseData, ...baseCallbackData}); // call the callback function
                 } catch (error) {
                     await taskManager.addTaskToFailed(taskId); // record it as failed
-                    this.onTaskFail({error, ...baseCallbackData});  // call the callback function
+                    await this.onTaskFail({error, ...baseCallbackData});  // call the callback function
                 }
                 await taskManager.removeTaskFromInProgress(taskId); // remove from list of in_progress tasks
                 await this._deployWorkers(); // put remaining queued tasks to in_progress

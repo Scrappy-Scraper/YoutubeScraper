@@ -4,7 +4,7 @@ Video -> Subtitle, title, description, views, thumbnail, duration, viewCount, ch
 Channel -> Title, description, thumbnail, list of videos, etc
 
 ## Install
-```aiignore
+```shell
 npm install @scrappy-scraper/youtube_scraper    # npm
 yarn add @scrappy-scraper/youtube_scraper       # yarn
 ```
@@ -28,38 +28,6 @@ yarn run test      # yarn
 ```
 
 ## Sample Code
-### Simple Sample
-```typescript
-import { ChannelParser, VideoParser } from '@scrappy-scraper/youtube_scraper';
-
-const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<string> => {
-    return "http://username:password@host:port"
-        .replace(":sessionId", sessionId || Math.round(Math.random() * 10**6).toString());
-}
-
-// instantiate parsers
-const videoParser = new VideoParser({ /* proxyUrlGenerator */ });
-const channelParser = new ChannelParser({ /* proxyUrlGenerator */ });
-
-// parse video
-await videoParser.load({videoId: "dQw4w9WgXcQ"});
-console.log(videoParser.availableCaptions);     // example: [ { name: 'English', languageCode: 'en', isGenerated: false } ]
-const channelId = videoParser.channelId!; // get the channelId after the load method is done
-
-await Promise.all([
-    videoParser.fetchTranscripts({languageLimit: 3}),   // load transcripts, limit to 3 languages. Default is 3. Put -1 to get ALL; put 0 to get none
-    channelParser.load({channelId}),                    // load info about the channel and a few videos
-]);
-while (channelParser.hasMoreVideos() && channelParser.videos.length < 100) await channelParser.fetchMoreVideos();
-
-console.log(JSON.stringify(videoParser.toJSON()))
-console.log(JSON.stringify(channelParser.toJSON()))
-
-```
-
-### Queued Sample
-This is the recommended way to run the parsers.
-Queuing helps avoid huge number of concurrent requests; this prevents over-burdening the network or getting the IP address banned.
 ```typescript
 import { VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl } from '@scrappy-scraper/youtube_scraper';
 
@@ -74,7 +42,7 @@ const videoProcessingQueue = VideoProcessingQueue.make({
     getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel that this video belongs to
     // transcriptLanguageLimit: 3,
     // preferredLanguages: ["en", "es", "zh"],
-    onTaskSuccess: (data: VideoProcessingQueue.CallbackData) => {
+    onTaskSuccess: async (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         console.log(JSON.stringify(taskResponse, null, 4));
     }
@@ -82,7 +50,7 @@ const videoProcessingQueue = VideoProcessingQueue.make({
 const channelProcessingQueue = ChannelProcessingQueue.make({
     concurrency: 3,
     proxyUrlGenerator,
-    onTaskSuccess: (data: ChannelProcessingQueue.CallbackData) => {
+    onTaskSuccess: async (data: ChannelProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         console.log(JSON.stringify(taskResponse, null, 4));
     }
@@ -124,4 +92,21 @@ for(let url of urls) {
 await videoProcessingQueue.allDone();
 await channelProcessingQueue.allDone();
 
+```
+
+## proxyUrlGenerator
+Please put in **Rotating** Residential proxy url.
+
+Session is supported by putting in `:sessionId` into the randomized segment of the url.
+
+For example:
+
+```markdown
+// Provided by Proxy provider:
+http://my_user_name_sid-adsfasdf:my_password@proxy.provider.io:port
+http://my_user_name_sid-qwerqwer:my_password@proxy.provider.io:port
+http://my_user_name_sid-zxcvzxcv:my_password@proxy.provider.io:port
+
+// What you put in:
+http://my_user_name_sid-:sessionId:my_password@proxy.provider.io:port
 ```

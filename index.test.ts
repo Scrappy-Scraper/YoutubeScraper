@@ -25,20 +25,20 @@ const videoProcessingQueue = VideoProcessingQueue.make({
     shouldLogTaskAlreadyAddedWarning: true,
     // transcriptLanguageLimit: 3,
     // preferredLanguages: ["en", "es", "zh"],
-    onTaskSuccess: (data: VideoProcessingQueue.CallbackData) => {
+    onTaskSuccess: async (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         Utils.writeToFile(`./output/video_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
-        VideoProcessingQueue.defaultOnTaskSuccess(data);
+        await VideoProcessingQueue.defaultOnTaskSuccess(data);
     }
 });
 const channelProcessingQueue = ChannelProcessingQueue.make({
     concurrency: 3,
     // proxyUrlGenerator, // TODO: Un-comment this line when you have filled-in the proxy url above
     shouldLogTaskAlreadyAddedWarning: true,
-    onTaskSuccess: (data: ChannelProcessingQueue.CallbackData) => {
+    onTaskSuccess: async (data: ChannelProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         Utils.writeToFile(`./output/channel_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
-        ChannelProcessingQueue.defaultOnTaskSuccess(data);
+        await ChannelProcessingQueue.defaultOnTaskSuccess(data);
     }
 });
 
@@ -46,6 +46,7 @@ const channelProcessingQueue = ChannelProcessingQueue.make({
 // ==================== Start the Parsing Process ====================
 const urls = [
     // videos
+    "https://www.youtube.com/watch?v=pzBi1nwDn8U",
     "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     "https://www.youtube.com/watch?v=Y39LE5ZoKjw",
     "https://www.youtube.com/watch?v=Y39LE5ZoKjwa", // a broken video url; it's here for testing purpose

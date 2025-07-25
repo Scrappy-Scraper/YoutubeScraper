@@ -23,16 +23,16 @@ export function make(params: {
     concurrency?: number; // number of tasks that can be in_progress at the same time. Before increasing this number, put in Proxy URL below
     transcriptLanguageLimit?: number; // -1 => all, 0 => none, 1+ => the max amount you want
     preferredLanguages?: string[];
-    onTaskStart?: (params: InputParams_OnTaskStart) => void;
-    onTaskSuccess?: (params: InputParams_OnTaskSuccess) => void;
-    onTaskFail?: (params: InputParams_OnTaskFail) => void;
+    onTaskStart?: (params: InputParams_OnTaskStart) => Promise<void>;
+    onTaskSuccess?: (params: InputParams_OnTaskSuccess) => Promise<void>;
+    onTaskFail?: (params: InputParams_OnTaskFail) => Promise<void>;
     getChannelProcessingQueue?: () => PromiseQueue<any, any>;
     proxyUrlGenerator?: (sessionId?: string|null|undefined) => Promise<string>;
     shouldLogTaskAlreadyAddedWarning?: boolean;
 }) {
     const {
         concurrency = 3,
-        transcriptLanguageLimit = 2,
+        transcriptLanguageLimit = 3,
         preferredLanguages = [],
         onTaskStart = defaultOnTaskStart,
         onTaskSuccess = defaultOnTaskSuccess,
@@ -70,19 +70,19 @@ export function make(params: {
 }
 
 export type InputParams_OnTaskStart = BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
-export function defaultOnTaskStart(params: InputParams_OnTaskStart) {
+export async function defaultOnTaskStart(params: InputParams_OnTaskStart) {
     const {taskId, taskInputData, promiseQueue} = params;
     console.log(`➡️🎬 Started parsing video ${taskId}`);
 }
 
 export type InputParams_OnTaskSuccess = Input_OnTaskSuccess<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
-export function defaultOnTaskSuccess(params: InputParams_OnTaskSuccess) {
+export async function defaultOnTaskSuccess(params: InputParams_OnTaskSuccess) {
     const {taskResponse, taskId, taskInputData, promiseQueue} = params;
     console.log(`✅🎬 Completed parsing video ${taskId}`);
 }
 
 export type InputParams_OnTaskFail = Input_OnTaskFail<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
-export function defaultOnTaskFail(params: InputParams_OnTaskFail) {
+export async function defaultOnTaskFail(params: InputParams_OnTaskFail) {
     const {error, taskId, taskInputData, promiseQueue} = params;
     console.error(`❌🎬 Failed parsing video ${taskId}`, error);
 }

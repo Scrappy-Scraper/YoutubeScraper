@@ -3,7 +3,7 @@ import {makeHttpRequest, raceRequests, unescapeHtml} from "./utils.js";
 import {md5} from "js-md5";
 import extractInnerTubeApiKeyFromHtml from "./extractInnerTubeApiKeyFromHtml.js";
 
-const languageByPopularity = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'ja', 'ko', 'th', 'ru'];
+const languageByPopularity = ['en', 'zh', 'es', 'fr', 'ar', 'ja', 'ko', 'th', 'ru', 'hi'];
 
 export default class VideoParser {
     get videoId(): string {
@@ -103,7 +103,8 @@ export default class VideoParser {
 
             // add the remainder of languages
             availableLanguages.forEach((languageCode) => {
-                selectedLanguageCodes.add(languageCode);
+                let primaryCode = languageCode.split('-')[0];
+                selectedLanguageCodes.add(primaryCode);
             });
 
             // Parse and fetch all available transcripts
