@@ -10,9 +10,9 @@ export default class PromiseQueue {
     set worker(makeWorkerTask) { this._makeWorkerTask = makeWorkerTask; }
     _makeWorkerTask = null;
     // callback functions
-    onTaskSuccess = (() => { });
-    onTaskFail = (() => { });
-    onTaskStart = (() => { });
+    onTaskSuccess = (async () => { });
+    onTaskFail = (async () => { });
+    onTaskStart = (async () => { });
     // task manager
     _taskManager;
     constructor(params) {
@@ -48,16 +48,16 @@ export default class PromiseQueue {
             await taskManager.addTaskToInProgress(taskId, taskInputData); // record that task as in_progress
             // callbacks
             const baseCallbackData = { taskInputData, taskId, promiseQueue: this };
-            this.onTaskStart(baseCallbackData);
+            await this.onTaskStart(baseCallbackData);
             (async () => {
                 try {
                     let responseData = await this._makeWorkerTask(taskInputData, taskId); // create the task and wait for result
                     await taskManager.addTaskToSucceeded(taskId); // record it as succeeded
-                    this.onTaskSuccess({ taskResponse: responseData, ...baseCallbackData }); // call the callback function
+                    await this.onTaskSuccess({ taskResponse: responseData, ...baseCallbackData }); // call the callback function
                 }
                 catch (error) {
                     await taskManager.addTaskToFailed(taskId); // record it as failed
-                    this.onTaskFail({ error, ...baseCallbackData }); // call the callback function
+                    await this.onTaskFail({ error, ...baseCallbackData }); // call the callback function
                 }
                 await taskManager.removeTaskFromInProgress(taskId); // remove from list of in_progress tasks
                 await this._deployWorkers(); // put remaining queued tasks to in_progress

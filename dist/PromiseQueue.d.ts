@@ -7,9 +7,9 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
     reAdjustTaskId: (id: string) => string;
     set worker(makeWorkerTask: ((taskInputData: TaskInputData, taskId: string) => Promise<TaskResponseData>));
     private _makeWorkerTask;
-    onTaskSuccess: ((params: InputParam_OnTaskSuccess<TaskInputData, TaskResponseData>) => void);
-    onTaskFail: ((params: InputParam_OnTaskFail<TaskInputData, TaskResponseData>) => void);
-    onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => void);
+    onTaskSuccess: ((params: InputParam_OnTaskSuccess<TaskInputData, TaskResponseData>) => Promise<void>);
+    onTaskFail: ((params: InputParam_OnTaskFail<TaskInputData, TaskResponseData>) => Promise<void>);
+    onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => Promise<void>);
     protected _taskManager: AbstractTaskManager<TaskInputData>;
     constructor(params?: {
         taskManager?: AbstractTaskManager<TaskInputData>;

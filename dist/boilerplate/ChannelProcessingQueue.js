@@ -20,15 +20,15 @@ export function make(params) {
     };
     return channelProcessingQueue;
 }
-export function defaultOnTaskStart(params) {
+export async function defaultOnTaskStart(params) {
     const { taskId, taskInputData, promiseQueue } = params;
     console.log(`➡️📺 Started parsing channel ${taskId}`);
 }
-export function defaultOnTaskSuccess(params) {
+export async function defaultOnTaskSuccess(params) {
     const { taskResponse, taskId, taskInputData, promiseQueue } = params;
     console.log(`✅📺 Completed parsing channel ${taskId}`);
 }
-export function defaultOnTaskFail(params) {
+export async function defaultOnTaskFail(params) {
     const { error, taskId, taskInputData, promiseQueue } = params;
     console.log(`❌📺 Failed parsing channel ${taskId}`);
 }

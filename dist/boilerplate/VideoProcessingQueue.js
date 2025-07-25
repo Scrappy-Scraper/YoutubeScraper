@@ -1,7 +1,7 @@
 import PromiseQueue from "../PromiseQueue.js";
 import VideoParser from "../VideoParser.js";
 export function make(params) {
-    const { concurrency = 3, transcriptLanguageLimit = 2, preferredLanguages = [], onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, shouldLogTaskAlreadyAddedWarning = false, } = params;
+    const { concurrency = 3, transcriptLanguageLimit = 3, preferredLanguages = [], onTaskStart = defaultOnTaskStart, onTaskSuccess = defaultOnTaskSuccess, onTaskFail = defaultOnTaskFail, proxyUrlGenerator, shouldLogTaskAlreadyAddedWarning = false, } = params;
     const videoProcessingQueue = new PromiseQueue();
     videoProcessingQueue.concurrency = concurrency;
     videoProcessingQueue.onTaskStart = onTaskStart;
@@ -24,15 +24,15 @@ export function make(params) {
     };
     return videoProcessingQueue;
 }
-export function defaultOnTaskStart(params) {
+export async function defaultOnTaskStart(params) {
     const { taskId, taskInputData, promiseQueue } = params;
     console.log(`➡️🎬 Started parsing video ${taskId}`);
 }
-export function defaultOnTaskSuccess(params) {
+export async function defaultOnTaskSuccess(params) {
     const { taskResponse, taskId, taskInputData, promiseQueue } = params;
     console.log(`✅🎬 Completed parsing video ${taskId}`);
 }
-export function defaultOnTaskFail(params) {
+export async function defaultOnTaskFail(params) {
     const { error, taskId, taskInputData, promiseQueue } = params;
     console.error(`❌🎬 Failed parsing video ${taskId}`, error);
 }
