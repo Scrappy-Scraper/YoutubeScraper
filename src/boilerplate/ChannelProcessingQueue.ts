@@ -13,7 +13,7 @@ type ChannelProcessingQueueOutPut = {
     vanityChannelUrl?: string;
     videos: {videoId: string, thumbnail: string, title: string}[];
 };
-export type CallbackData = {taskResponse: ChannelProcessingQueueOutPut} & BasePromiseQueueCallbackData<ChannelProcessingQueueOutPut, ChannelProcessingQueueOutPut>;
+export type CallbackData = {taskResponse: ChannelProcessingQueueOutPut} & BasePromiseQueueCallbackData<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>;
 export function make(params: {
     concurrency?: number; // number of tasks that can be in_progress at the same time. Before increasing this number, put in Proxy URL below
     onTaskStart?: (params: InputParams_OnTaskStart) => Promise<void>;

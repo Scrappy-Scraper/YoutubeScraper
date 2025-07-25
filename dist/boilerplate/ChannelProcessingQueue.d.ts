@@ -18,7 +18,7 @@ type ChannelProcessingQueueOutPut = {
 };
 export type CallbackData = {
     taskResponse: ChannelProcessingQueueOutPut;
-} & BasePromiseQueueCallbackData<ChannelProcessingQueueOutPut, ChannelProcessingQueueOutPut>;
+} & BasePromiseQueueCallbackData<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>;
 export declare function make(params: {
     concurrency?: number;
     onTaskStart?: (params: InputParams_OnTaskStart) => Promise<void>;
