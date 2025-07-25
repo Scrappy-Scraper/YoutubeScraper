@@ -51,7 +51,7 @@ export default class ChannelParser {
             id: channelRawMetadata.externalId ?? '',
             title: channelRawMetadata.title ?? '',
             description: channelRawMetadata.description ?? '',
-            thumbnail: channelRawMetadata.avatar.thumbnails[0] ?? '',
+            thumbnail: channelRawMetadata.avatar.thumbnails[0].url ?? '',
             rssUrl: channelRawMetadata.rssUrl ?? '',
             channelUrl: channelRawMetadata.channelUrl ?? '',
             vanityChannelUrl: channelRawMetadata.vanityChannelUrl ?? '',
