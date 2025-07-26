@@ -5,8 +5,8 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
     get concurrency() { return this._concurrency; }
     set concurrency(value: number) { this._concurrency = Math.max(1, value); }
 
-    get shouldLogTaskAlreadyAddedWarning() { return this._taskManager.shouldLogTaskAlreadyAddedWarning; }
-    set shouldLogTaskAlreadyAddedWarning(value: boolean) { this._taskManager.shouldLogTaskAlreadyAddedWarning = value; }
+    get shouldLogTaskAlreadyAddedWarning() { return this.taskManager.shouldLogTaskAlreadyAddedWarning; }
+    set shouldLogTaskAlreadyAddedWarning(value: boolean) { this.taskManager.shouldLogTaskAlreadyAddedWarning = value; }
 
     reAdjustTaskId: (id: string) => string = ((id: string) => id); // if the taskId need to be re-adjusted, put in the adjuster here
 
@@ -20,13 +20,13 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
     public onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => Promise<void>) = (async () => { /* Default to empty function */ })
 
     // task manager
-    protected _taskManager: AbstractTaskManager<TaskInputData>;
+    public taskManager: AbstractTaskManager<TaskInputData>;
     constructor(params?: {taskManager?: AbstractTaskManager<TaskInputData>}) {
-        this._taskManager = params?.taskManager ?? new LocalTaskManager<TaskInputData>();
+        this.taskManager = params?.taskManager ?? new LocalTaskManager<TaskInputData>();
     }
 
     public async allDone() {
-        const taskManager = this._taskManager;
+        const taskManager = this.taskManager;
         let isAllDone = false;
 
         while (!isAllDone) {
@@ -39,11 +39,11 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
     public async enqueue(params: { taskInputData: TaskInputData; taskId: string; }) {
         const taskId = this.reAdjustTaskId(params.taskId);
         const taskInputData = params.taskInputData;
-        await this._taskManager.enqueue({taskInputData, taskId});
+        await this.taskManager.enqueue({taskInputData, taskId});
         await this._deployWorkers();
     }
     private async _deployWorkers(): Promise<void> {
-        const taskManager = this._taskManager;
+        const taskManager = this.taskManager;
         const taskIds = await taskManager.getTaskIds();
         while (
             taskIds.pending.length > 0 &&                                 // still has pending tasks
@@ -143,6 +143,7 @@ abstract class AbstractTaskManager<TaskInputData> {
     public abstract getFailedTaskIds(): Promise<string[]>;
     public abstract addTaskToFailed(taskId: string): Promise<void>;
     public abstract removeTaskFromFailed(taskId: string): Promise<void>;
+    public abstract clearFailedTasks(): Promise<void>;
 
     public abstract getSuccessIdsExpiry(): Promise<number>;
     public abstract setSuccessIdsExpiry(value: number): Promise<void>;
@@ -232,6 +233,9 @@ class LocalTaskManager<TaskInputData> extends AbstractTaskManager<TaskInputData>
     }
     async removeTaskFromFailed(taskId: string): Promise<void> {
         this._failedTaskIds.delete(taskId);
+    }
+    async clearFailedTasks(): Promise<void> {
+        this._failedTaskIds.clear();
     }
 
     // Succeeded Task Ids Expiry

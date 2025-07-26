@@ -39,15 +39,25 @@ export default class VideoParser {
         };
         const makeMetaDataRequest = async () => {
             const proxyUrl = await this.getProxyUrl();
-            return await makeHttpRequest({
+            const response = await makeHttpRequest({
                 url,
                 proxyUrl,
                 method: 'POST',
                 requestData: JSON.stringify(requestData),
             });
+            if (response.status >= 400)
+                throw new Error(`Request failed for video ${videoId}: ${response.status}`);
+            let metaData = JSON.parse(response.text);
+            const { playabilityStatus } = metaData;
+            if (playabilityStatus && playabilityStatus.status !== 'OK') {
+                if (playabilityStatus.reason === 'This video is unavailable') {
+                    throw new Error(`Video ${videoId} is unavailable`);
+                }
+                throw new Error(`Request failed for video ${videoId}: ${playabilityStatus.reason}`);
+            }
+            return metaData;
         };
-        const response = await raceRequests({ generateRequest: makeMetaDataRequest, amount: 3, waitTime: 5 });
-        let metaData = JSON.parse(response.text);
+        const metaData = await raceRequests({ generateRequest: makeMetaDataRequest, amount: 3, waitTime: 5 });
         const { playabilityStatus } = metaData;
         if (playabilityStatus && playabilityStatus.status !== 'OK') {
             if (playabilityStatus.reason === 'This video is unavailable') {

@@ -19,14 +19,16 @@ export async function raceRequests(params: {
         const task = generateRequest();
         tasks.push(task);
         task
-            .then(() => {
-                isDone = true;
-            }).catch(() => {
-        });
-        if (waitTime) { // time to wait before adding another request
-            await new Promise((resolve) => {
-                setTimeout(resolve, waitTime * 1000);
-            });
+            .then(() => {isDone = true;})
+            .catch(() => {});
+
+        if(waitTime) {
+            let waitStart = new Date().getTime();
+            let sleepDuration = Math.max(10, waitTime / 100 * 1000); // at least 10 ms
+            while (new Date().getTime() - waitStart < waitTime * 1000) {
+                if(isDone) return Promise.any(tasks);
+                await sleepAsync(sleepDuration);
+            }
         }
     }
     return Promise.any(tasks);

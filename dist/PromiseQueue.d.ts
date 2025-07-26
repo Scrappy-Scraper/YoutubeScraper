@@ -10,7 +10,7 @@ export default class PromiseQueue<TaskInputData, TaskResponseData> {
     onTaskSuccess: ((params: InputParam_OnTaskSuccess<TaskInputData, TaskResponseData>) => Promise<void>);
     onTaskFail: ((params: InputParam_OnTaskFail<TaskInputData, TaskResponseData>) => Promise<void>);
     onTaskStart: ((params: BasePromiseQueueCallbackData<TaskInputData, TaskResponseData>) => Promise<void>);
-    protected _taskManager: AbstractTaskManager<TaskInputData>;
+    taskManager: AbstractTaskManager<TaskInputData>;
     constructor(params?: {
         taskManager?: AbstractTaskManager<TaskInputData>;
     });
@@ -54,6 +54,7 @@ declare abstract class AbstractTaskManager<TaskInputData> {
     abstract getFailedTaskIds(): Promise<string[]>;
     abstract addTaskToFailed(taskId: string): Promise<void>;
     abstract removeTaskFromFailed(taskId: string): Promise<void>;
+    abstract clearFailedTasks(): Promise<void>;
     abstract getSuccessIdsExpiry(): Promise<number>;
     abstract setSuccessIdsExpiry(value: number): Promise<void>;
     abstract getFailureIdsExpiry(): Promise<number>;

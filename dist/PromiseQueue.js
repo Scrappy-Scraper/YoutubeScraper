@@ -3,8 +3,8 @@ export default class PromiseQueue {
     _concurrency = 3; // number of tasks that can be in-progress at the same time
     get concurrency() { return this._concurrency; }
     set concurrency(value) { this._concurrency = Math.max(1, value); }
-    get shouldLogTaskAlreadyAddedWarning() { return this._taskManager.shouldLogTaskAlreadyAddedWarning; }
-    set shouldLogTaskAlreadyAddedWarning(value) { this._taskManager.shouldLogTaskAlreadyAddedWarning = value; }
+    get shouldLogTaskAlreadyAddedWarning() { return this.taskManager.shouldLogTaskAlreadyAddedWarning; }
+    set shouldLogTaskAlreadyAddedWarning(value) { this.taskManager.shouldLogTaskAlreadyAddedWarning = value; }
     reAdjustTaskId = ((id) => id); // if the taskId need to be re-adjusted, put in the adjuster here
     // worker is the function that process the data
     set worker(makeWorkerTask) { this._makeWorkerTask = makeWorkerTask; }
@@ -14,12 +14,12 @@ export default class PromiseQueue {
     onTaskFail = (async () => { });
     onTaskStart = (async () => { });
     // task manager
-    _taskManager;
+    taskManager;
     constructor(params) {
-        this._taskManager = params?.taskManager ?? new LocalTaskManager();
+        this.taskManager = params?.taskManager ?? new LocalTaskManager();
     }
     async allDone() {
-        const taskManager = this._taskManager;
+        const taskManager = this.taskManager;
         let isAllDone = false;
         while (!isAllDone) {
             const { pending, inProgress } = await taskManager.getTaskIds();
@@ -30,11 +30,11 @@ export default class PromiseQueue {
     async enqueue(params) {
         const taskId = this.reAdjustTaskId(params.taskId);
         const taskInputData = params.taskInputData;
-        await this._taskManager.enqueue({ taskInputData, taskId });
+        await this.taskManager.enqueue({ taskInputData, taskId });
         await this._deployWorkers();
     }
     async _deployWorkers() {
-        const taskManager = this._taskManager;
+        const taskManager = this.taskManager;
         const taskIds = await taskManager.getTaskIds();
         while (taskIds.pending.length > 0 && // still has pending tasks
             taskIds.inProgress.length < this._concurrency // can still add more tasks to in_progress
@@ -183,6 +183,9 @@ class LocalTaskManager extends AbstractTaskManager {
     }
     async removeTaskFromFailed(taskId) {
         this._failedTaskIds.delete(taskId);
+    }
+    async clearFailedTasks() {
+        this._failedTaskIds.clear();
     }
     // Succeeded Task Ids Expiry
     _successIdsExpiry = 10 * 60; // time in seconds
