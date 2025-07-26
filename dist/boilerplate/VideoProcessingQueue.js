@@ -14,7 +14,8 @@ export function make(params) {
         await videoParser.load({ videoId });
         const channelId = videoParser.channelId; // read out the channel id of this video
         if (params.getChannelProcessingQueue) {
-            await params.getChannelProcessingQueue().enqueue({
+            const channelProcessingQueue = params.getChannelProcessingQueue();
+            await channelProcessingQueue.enqueue({
                 taskInputData: { channelId },
                 taskId: channelId,
             });

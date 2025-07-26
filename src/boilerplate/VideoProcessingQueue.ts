@@ -5,8 +5,8 @@ import PromiseQueue, {
 } from "../PromiseQueue.js";
 import VideoParser, {Transcript} from "../VideoParser.js";
 
-type VideoProcessingQueueInput = {videoId: string};     // Input data type for each of the processing task
-type VideoProcessingQueueOutPut = { // Response data type
+export type VideoProcessingQueueInput = {videoId: string};     // Input data type for each of the processing task
+export type VideoProcessingQueueOutPut = { // Response data type
     id: string;
     title: string;
     description: string;
@@ -55,7 +55,8 @@ export function make(params: {
 
         const channelId = videoParser.channelId;    // read out the channel id of this video
         if(params.getChannelProcessingQueue) {
-            await params.getChannelProcessingQueue().enqueue({  // parse info about this video's channel
+            const channelProcessingQueue = params.getChannelProcessingQueue();
+            await channelProcessingQueue.enqueue({  // parse info about this video's channel
                 taskInputData: {channelId},
                 taskId: channelId,
             });

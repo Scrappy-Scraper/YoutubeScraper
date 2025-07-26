@@ -2,8 +2,8 @@ import PromiseQueue, {BasePromiseQueueCallbackData} from "../PromiseQueue.js";
 import {reAdjustYouTubeChannelId} from "../YouTubeUrl.js";
 import ChannelParser from "../ChannelParser.js";
 
-type ChannelProcessingQueueInput = {channelId: string};
-type ChannelProcessingQueueOutPut = {
+export type ChannelProcessingQueueInput = {channelId: string};
+export type ChannelProcessingQueueOutPut = {
     id?: string;
     title?: string;
     description?: string;
@@ -48,7 +48,14 @@ export function make(params: {
 
         while (channelParser.hasMoreVideos() && channelParser.videos.length < numVideos) await channelParser.fetchMoreVideos();
 
-        return channelParser.toJSON();
+        const data = channelParser.toJSON();
+        let extractedChannelId = data.id;
+        if(extractedChannelId) {
+            extractedChannelId = reAdjustYouTubeChannelId(extractedChannelId);
+            await channelProcessingQueue.taskManager.addTaskToSucceeded(extractedChannelId);
+        }
+
+        return data;
     }
 
     return channelProcessingQueue;

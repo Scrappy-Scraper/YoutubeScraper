@@ -16,7 +16,13 @@ export function make(params) {
         await channelParser.load({ channelId });
         while (channelParser.hasMoreVideos() && channelParser.videos.length < numVideos)
             await channelParser.fetchMoreVideos();
-        return channelParser.toJSON();
+        const data = channelParser.toJSON();
+        let extractedChannelId = data.id;
+        if (extractedChannelId) {
+            extractedChannelId = reAdjustYouTubeChannelId(extractedChannelId);
+            await channelProcessingQueue.taskManager.addTaskToSucceeded(extractedChannelId);
+        }
+        return data;
     };
     return channelProcessingQueue;
 }

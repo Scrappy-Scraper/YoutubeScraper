@@ -1,9 +1,9 @@
 import PromiseQueue, { BasePromiseQueueCallbackData, InputParam_OnTaskSuccess as Input_OnTaskSuccess, InputParam_OnTaskFail as Input_OnTaskFail } from "../PromiseQueue.js";
 import { Transcript } from "../VideoParser.js";
-type VideoProcessingQueueInput = {
+export type VideoProcessingQueueInput = {
     videoId: string;
 };
-type VideoProcessingQueueOutPut = {
+export type VideoProcessingQueueOutPut = {
     id: string;
     title: string;
     description: string;
@@ -35,4 +35,3 @@ export type InputParams_OnTaskSuccess = Input_OnTaskSuccess<VideoProcessingQueue
 export declare function defaultOnTaskSuccess(params: InputParams_OnTaskSuccess): Promise<void>;
 export type InputParams_OnTaskFail = Input_OnTaskFail<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export declare function defaultOnTaskFail(params: InputParams_OnTaskFail): Promise<void>;
-export {};

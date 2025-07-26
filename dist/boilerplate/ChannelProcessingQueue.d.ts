@@ -1,8 +1,8 @@
 import PromiseQueue, { BasePromiseQueueCallbackData } from "../PromiseQueue.js";
-type ChannelProcessingQueueInput = {
+export type ChannelProcessingQueueInput = {
     channelId: string;
 };
-type ChannelProcessingQueueOutPut = {
+export type ChannelProcessingQueueOutPut = {
     id?: string;
     title?: string;
     description?: string;
@@ -38,4 +38,3 @@ export type InputParams_OnTaskFail = {
     error: any;
 } & BasePromiseQueueCallbackData<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>;
 export declare function defaultOnTaskFail(params: InputParams_OnTaskFail): Promise<void>;
-export {};
