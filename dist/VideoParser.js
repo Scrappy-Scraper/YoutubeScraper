@@ -78,9 +78,10 @@ export default class VideoParser {
             languageLimit = undefined;
         try {
             // Get transcript data from YouTube API
-            const tracksData = metadata.captions?.playerCaptionsTracklistRenderer ?? [];
+            const tracksData = metadata.captions?.playerCaptionsTracklistRenderer ?? {};
+            const captionTracks = tracksData.captionTracks || [];
             // a list of available languages
-            const availableLanguages = new Set(tracksData.captionTracks.map((track) => track.languageCode.split('-')[0]));
+            const availableLanguages = new Set(captionTracks.map((track) => track.languageCode.split('-')[0]));
             // preferred languages
             let preferredLanguages = new Set(params.preferredLanguages ?? []);
             languageByPopularity.forEach((lang) => { preferredLanguages.add(lang); });
@@ -97,7 +98,6 @@ export default class VideoParser {
             });
             // Parse and fetch all available transcripts
             const transcripts = [];
-            const captionTracks = tracksData.captionTracks || [];
             const langCodesToFetch = new Set(Array.from(selectedLanguageCodes).slice(0, languageLimit));
             const filteringByLanguage = langCodesToFetch.size > 0;
             const fetchTasks = captionTracks.map((track) => {
@@ -148,6 +148,7 @@ export default class VideoParser {
             author: videoDetails.author ?? '',
             isPrivate: videoDetails.isPrivate ?? false,
             transcripts: this._transcripts ?? [],
+            availableTranscripts: this.availableCaptions,
         };
     }
     async getProxyUrl(sessionId = undefined) {

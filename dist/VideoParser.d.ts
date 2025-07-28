@@ -39,6 +39,11 @@ export default class VideoParser {
         author: any;
         isPrivate: any;
         transcripts: Transcript[];
+        availableTranscripts: {
+            name: string;
+            languageCode: string;
+            isGenerated: boolean;
+        }[];
     };
     private getProxyUrl;
     private fetchVideoHtml;

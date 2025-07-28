@@ -3,6 +3,8 @@ Video -> Subtitle, title, description, views, thumbnail, duration, viewCount, ch
 
 Channel -> Title, description, thumbnail, list of videos, etc
 
+Try out this scraper for free on [Apify.com](https://apify.com/scrappy-scraper/youtubescraper-apify)
+
 ## Install
 ```shell
 npm install @scrappy-scraper/youtube_scraper    # npm

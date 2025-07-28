@@ -93,11 +93,12 @@ export default class VideoParser {
 
         try {
             // Get transcript data from YouTube API
-            const tracksData = metadata.captions?.playerCaptionsTracklistRenderer ?? [];
+            const tracksData = metadata.captions?.playerCaptionsTracklistRenderer ?? {};
+            const captionTracks = tracksData.captionTracks || [];
 
             // a list of available languages
             const availableLanguages = new Set<string>(
-                tracksData.captionTracks.map((track: { languageCode: string }) => track.languageCode.split('-')[0]),
+                captionTracks.map((track: { languageCode: string }) => track.languageCode.split('-')[0]),
             );
 
             // preferred languages
@@ -118,7 +119,6 @@ export default class VideoParser {
 
             // Parse and fetch all available transcripts
             const transcripts: Transcript[] = [];
-            const captionTracks = tracksData.captionTracks || [];
             const langCodesToFetch: Set<string> = new Set<string>(Array.from(selectedLanguageCodes).slice(0, languageLimit));
             const filteringByLanguage = langCodesToFetch.size > 0;
 
@@ -176,6 +176,7 @@ export default class VideoParser {
             author: videoDetails.author ?? '',
             isPrivate: videoDetails.isPrivate ?? false,
             transcripts: this._transcripts ?? [],
+            availableTranscripts: this.availableCaptions,
         };
     }
 
