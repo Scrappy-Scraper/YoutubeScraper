@@ -1,6 +1,5 @@
 import axios from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import fs from "fs";
 export const sleepAsync = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function raceRequests(params) {
     const { generateRequest, amount, waitTime } = params;
@@ -140,10 +139,3 @@ export function getAllDescendantObjects(params) {
     }
     return descendantNodes;
 }
-export const writeToFile = (path, content) => {
-    // create folder if not exists
-    const folder = path.substring(0, path.lastIndexOf("/"));
-    if (!fs.existsSync(folder))
-        fs.mkdirSync(folder, { recursive: true });
-    fs.writeFileSync(path, content);
-};

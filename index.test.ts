@@ -1,4 +1,13 @@
-import {ChannelProcessingQueue, Utils, VideoProcessingQueue, YouTubeUrl} from "./src";
+import {ChannelProcessingQueue, VideoProcessingQueue, YouTubeUrl} from "./src";
+import fs from "fs";
+
+export const writeToFile = (path: string, content: string) => {
+    // create folder if not exists
+    const folder = path.substring(0, path.lastIndexOf("/"));
+    if (!fs.existsSync(folder)) fs.mkdirSync(folder, {recursive: true});
+
+    fs.writeFileSync(path, content);
+}
 
 /*
  * ============================================================
@@ -27,7 +36,7 @@ const videoProcessingQueue = VideoProcessingQueue.make({
     // preferredLanguages: ["en", "es", "zh"],
     onTaskSuccess: async (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
-        Utils.writeToFile(`./output/video_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
+        writeToFile(`./output/video_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
         await VideoProcessingQueue.defaultOnTaskSuccess(data);
     }
 });
@@ -37,7 +46,7 @@ const channelProcessingQueue = ChannelProcessingQueue.make({
     shouldLogTaskAlreadyAddedWarning: true,
     onTaskSuccess: async (data: ChannelProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
-        Utils.writeToFile(`./output/channel_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
+        writeToFile(`./output/channel_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
         await ChannelProcessingQueue.defaultOnTaskSuccess(data);
     }
 });

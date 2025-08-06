@@ -18,32 +18,61 @@ Works in `Node.js` and `browsers`
 If you want to make modification and test it, look for the test file `index.test.ts`
 The main code is in `src/index.ts`
 
-### To Build
+### Clone the Repository
 ```shell
-npm run build       # npm
-yarn run build      # yarn
+git clone https://github.com/Scrappy-Scraper/YoutubeScraper.git
+cd YoutubeScraper
+npm install
 ```
+
 ### To Test Run
 ```shell
 npm run test       # npm
 yarn run test      # yarn
 ```
 
+### To Build JS File
+```shell
+npm run build       # npm
+yarn run build      # yarn
+```
+
 ## Sample Code
 ```typescript
+/* Download Captions */
+
+import { ChannelParser, VideoParser } from '@scrappy-scraper/youtube_scraper';
+const videoParser = new VideoParser();
+await videoParser.load({videoId: "dQw4w9WgXcQ"});
+
+// show the available caption tracks
+console.log(videoParser.availableCaptions);     // example: [ { name: 'English', languageCode: 'en', isGenerated: false } ]
+
+// show the channel id of this video
+const channelId = videoParser.channelId!; // get the channelId after the load method is done
+await videoParser.fetchTranscripts({languageLimit: 3})
+
+// show all the data
+console.log(JSON.stringify(videoParser.toJSON())) // captions are inside this JSON, along with other data
+```
+
+```typescript
+/* Queue up Processing Tasks Locally */
+
 import { VideoProcessingQueue, ChannelProcessingQueue, YouTubeUrl } from '@scrappy-scraper/youtube_scraper';
 
 const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<string> => {
-    return "http://username:password@host:port"
-        .replace(":sessionId", sessionId || Math.round(Math.random() * 10**6).toString());
+    return null; // if not using proxy, return null
+    // return "http://username:password@host:port"
+    //     .replace(":sessionId", sessionId || Math.round(Math.random() * 10**6).toString());
 }
 
 const videoProcessingQueue = VideoProcessingQueue.make({
     concurrency: 3,
     proxyUrlGenerator,
     getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel that this video belongs to
-    // transcriptLanguageLimit: 3,
-    // preferredLanguages: ["en", "es", "zh"],
+    transcriptLanguageLimit: 3,
+    preferredLanguages: ["en", "es", "zh"],
     onTaskSuccess: async (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
         console.log(JSON.stringify(taskResponse, null, 4));
