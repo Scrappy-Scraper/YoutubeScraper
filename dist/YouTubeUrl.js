@@ -44,6 +44,8 @@ export function isValidYouTubeVideoUrl(url) {
     return videoUrlPatterns.some((pattern) => pattern.test(cleanedUrl));
 }
 export function cleanYouTubeVideoUrl(url) {
+    if (url.trim() === "")
+        return "";
     let cleanedUrl = url.replace(/^http(s?):\/\//, ""); // remove leading "https://" and "http://";
     cleanedUrl = cleanedUrl.replace(/^(m|www)\./, ""); // remove leading "m." and "www.";
     // handle youtube-nocookie.com
@@ -129,6 +131,8 @@ export function isValidYouTubeChannelUrl(url) {
     return channelUrlPatterns.some((pattern) => pattern.test(url));
 }
 export function cleanYouTubeChannelUrl(url) {
+    if (url.trim() === "")
+        return "";
     const channelId = extractYoutubeChannelId(url);
     return `https://www.youtube.com/${channelId}`;
 }
