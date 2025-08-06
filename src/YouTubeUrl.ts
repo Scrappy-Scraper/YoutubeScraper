@@ -52,6 +52,8 @@ export function isValidYouTubeVideoUrl(url: string): boolean {
 }
 
 export function cleanYouTubeVideoUrl(url: string): string {
+    if(url.trim() === "") return "";
+
     let cleanedUrl = url.replace(/^http(s?):\/\//, ""); // remove leading "https://" and "http://";
     cleanedUrl = cleanedUrl.replace(/^(m|www)\./, ""); // remove leading "m." and "www.";
 
@@ -152,6 +154,7 @@ export function isValidYouTubeChannelUrl(url: string): boolean {
 }
 
 export function cleanYouTubeChannelUrl(url: string): string {
+    if(url.trim() === "") return "";
     const channelId = extractYoutubeChannelId(url);
     return `https://www.youtube.com/${channelId}`;
 }

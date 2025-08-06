@@ -12,7 +12,9 @@ yarn add @scrappy-scraper/youtube_scraper       # yarn
 ```
 
 ## Environment
-Works in `Node.js` and `browsers`
+Works in `Node.js` and `react-native`
+
+Does not work in `browser` due to CORS
 
 ## Local Build and Test
 If you want to make modification and test it, look for the test file `index.test.ts`
@@ -41,16 +43,15 @@ yarn run build      # yarn
 ```typescript
 /* Download Captions */
 
-import { ChannelParser, VideoParser } from '@scrappy-scraper/youtube_scraper';
+import { VideoParser } from '@scrappy-scraper/youtube_scraper';
 const videoParser = new VideoParser();
 await videoParser.load({videoId: "dQw4w9WgXcQ"});
 
 // show the available caption tracks
 console.log(videoParser.availableCaptions);     // example: [ { name: 'English', languageCode: 'en', isGenerated: false } ]
 
-// show the channel id of this video
-const channelId = videoParser.channelId!; // get the channelId after the load method is done
-await videoParser.fetchTranscripts({languageLimit: 3})
+// fetch transcripts
+await videoParser.fetchTranscripts({languageLimit: 3, preferredLanguages: ['en']})
 
 // show all the data
 console.log(JSON.stringify(videoParser.toJSON())) // captions are inside this JSON, along with other data
