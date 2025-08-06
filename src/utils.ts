@@ -1,5 +1,4 @@
 import axios, {AxiosRequestConfig} from "axios";
-import {HttpsProxyAgent} from "https-proxy-agent";
 
 export const sleepAsync = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -67,6 +66,7 @@ export async function makeHttpRequest(params: {
 
         // Handle proxy configuration
         if (proxyUrl) {
+            const {HttpsProxyAgent} = await import('https-proxy-agent');
             axiosConfig.httpsAgent = new HttpsProxyAgent(proxyUrl);
         }
 
