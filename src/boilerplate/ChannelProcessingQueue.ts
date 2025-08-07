@@ -11,7 +11,7 @@ export type ChannelProcessingQueueOutPut = {
     rssUrl?: string;
     channelUrl?: string;
     vanityChannelUrl?: string;
-    videos: {videoId: string, thumbnail: string, title: string}[];
+    videos?: {videoId: string, thumbnail: string, title: string}[];
 };
 export type CallbackData = {taskResponse: ChannelProcessingQueueOutPut} & BasePromiseQueueCallbackData<ChannelProcessingQueueInput, ChannelProcessingQueueOutPut>;
 export function make(params: {

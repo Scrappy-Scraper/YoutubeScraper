@@ -66,7 +66,7 @@ export default class ChannelParser {
             this._videos.set(vId, newVid);
         }
         this._nextPageAccessData = ChannelParser.getNextPageAccessData(pageData);
-        this._channelId = this._metadata.id;
+        this._channelId = this._metadata.id ?? "";
     }
     async fetchMoreVideos() {
         const response = await makeHttpRequest({

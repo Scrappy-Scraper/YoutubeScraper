@@ -10,7 +10,7 @@ export type ChannelProcessingQueueOutPut = {
     rssUrl?: string;
     channelUrl?: string;
     vanityChannelUrl?: string;
-    videos: {
+    videos?: {
         videoId: string;
         thumbnail: string;
         title: string;

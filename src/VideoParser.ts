@@ -160,7 +160,7 @@ export default class VideoParser {
         }
     }
 
-    toJSON() {
+    toJSON(): VideoMetadata {
         const videoDetails = this._metadata?.videoDetails ?? {};
         const thumbnails: { url: string; width: number; height: number }[] = videoDetails.thumbnail?.thumbnails ?? [];
         thumbnails.sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
@@ -264,4 +264,18 @@ export interface TranscriptSnippet {
     text: string;
     start: number;
     duration: number;
+}
+
+export type VideoMetadata = {
+    id: string;
+    title: string;
+    description: string;
+    thumbnail: string;
+    length: number;
+    viewCount: number;
+    channelId: string;
+    author: string;
+    isPrivate: boolean;
+    transcripts: Transcript[];
+    availableTranscripts: {name: string, languageCode: string, isGenerated: boolean}[];
 }

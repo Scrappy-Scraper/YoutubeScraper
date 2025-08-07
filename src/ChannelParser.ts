@@ -90,7 +90,7 @@ export default class ChannelParser {
         }
         this._nextPageAccessData = ChannelParser.getNextPageAccessData(pageData);
 
-        this._channelId = this._metadata.id;
+        this._channelId = this._metadata.id ?? "";
     }
 
     async fetchMoreVideos() {
@@ -130,7 +130,7 @@ export default class ChannelParser {
         return this._nextPageAccessData !== null;
     }
 
-    toJSON(){
+    toJSON(): ChannelMetadata {
         return {
             ...this._metadata,
             videos: Array.from(this._videos.values()),
@@ -208,12 +208,13 @@ type ListVideoInfo = {
     title: string;
     thumbnail: string;
 };
-type ChannelMetadata = {
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    rssUrl: string;
-    channelUrl: string;
-    vanityChannelUrl: string;
+export type ChannelMetadata = {
+    id?: string;
+    title?: string;
+    description?: string;
+    thumbnail?: string;
+    rssUrl?: string;
+    channelUrl?: string;
+    vanityChannelUrl?: string;
+    videos?: ListVideoInfo[];
 };
