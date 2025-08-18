@@ -22,7 +22,7 @@ export default class ChannelParser {
     private _channelId: string | null = null;
     private _proxyUrls: string[] = []; // list of available proxy urls to choose from
     private _proxyUrlGenerator: ((sessionId?: string | undefined | null) => Promise<string | undefined>) | null;
-    private _metadata: ChannelMetadata | null = null;
+    private _metadata: ChannelInfo | null = null;
     private _videos: Map<string, { videoId: string; thumbnail: string; title: string }> = new Map<
         string,
         { videoId: string; thumbnail: string; title: string }
@@ -130,7 +130,7 @@ export default class ChannelParser {
         return this._nextPageAccessData !== null;
     }
 
-    toJSON(): ChannelMetadata {
+    toJSON(): ChannelInfo {
         return {
             ...this._metadata,
             videos: Array.from(this._videos.values()),
@@ -208,7 +208,7 @@ type ListVideoInfo = {
     title: string;
     thumbnail: string;
 };
-export type ChannelMetadata = {
+export type ChannelInfo = {
     id?: string;
     title?: string;
     description?: string;

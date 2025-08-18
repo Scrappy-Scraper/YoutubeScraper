@@ -28,7 +28,7 @@ export default class VideoParser {
         languageLimit?: number;
         preferredLanguages?: string[];
     }): Promise<Transcript[]>;
-    toJSON(): VideoMetadata;
+    toJSON(): VideoInfo;
     private getProxyUrl;
     private fetchVideoHtml;
 }
@@ -43,11 +43,21 @@ export interface TranscriptSnippet {
     start: number;
     duration: number;
 }
-export type VideoMetadata = {
+export type VideoInfo = {
     id: string;
     title: string;
     description: string;
     thumbnail: string;
+    mediaFiles: ({
+        "mimeType": string;
+        "bitrate": number;
+        "width"?: number;
+        "height"?: number;
+        "fps"?: number;
+    } & {
+        [key in string]: any;
+    })[];
+    uploadedTime: number | null;
     length: number;
     viewCount: number;
     channelId: string;

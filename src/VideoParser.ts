@@ -160,16 +160,26 @@ export default class VideoParser {
         }
     }
 
-    toJSON(): VideoMetadata {
+    toJSON(): VideoInfo {
         const videoDetails = this._metadata?.videoDetails ?? {};
         const thumbnails: { url: string; width: number; height: number }[] = videoDetails.thumbnail?.thumbnails ?? [];
         thumbnails.sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
+        const streamingData = this._metadata?.streamingData ?? {};
+        const mediaFiles = [...(streamingData.formats ?? []), ...(streamingData.adaptiveFormats ?? [])];
+        const lastModifiedTimes = mediaFiles
+            .filter(f => f.hasOwnProperty("lastModified")) // look at the lastModified time (in microseconds since Unix epoch)
+            .map(f => Math.round(parseInt(f.lastModified) / 1000000)) // parse the number and convert to seconds
+            .filter(v => !isNaN(v) && v > 1200000000) // time should be greater than 1200000000 (Jan 2008)
+            .filter(v => v < (new Date).getTime() / 1000 + 3000000) as number[]; // time should be less than 1 month into the future
+        const uploadedTime = lastModifiedTimes.length > 0 ? Math.min(...lastModifiedTimes) : null;
 
         return {
             id: this._videoId ?? '',
             title: videoDetails.title ?? '',
             description: videoDetails.shortDescription ?? '',
             thumbnail: thumbnails.at(-1)?.url ?? '',
+            mediaFiles,
+            uploadedTime,
             length: videoDetails.lengthSeconds ? parseInt(videoDetails.lengthSeconds, 10) : 0,
             viewCount: videoDetails.viewCount ? parseInt(videoDetails.viewCount, 10) : 0,
             channelId: videoDetails.channelId ?? '',
@@ -266,11 +276,19 @@ export interface TranscriptSnippet {
     duration: number;
 }
 
-export type VideoMetadata = {
+export type VideoInfo = {
     id: string;
     title: string;
     description: string;
     thumbnail: string;
+    mediaFiles: ({
+        "mimeType": string;
+        "bitrate": number;
+        "width"?: number;
+        "height"?: number;
+        "fps"?: number;
+    } & {[key in string]: any})[];
+    uploadedTime: number | null;
     length: number;
     viewCount: number;
     channelId: string;

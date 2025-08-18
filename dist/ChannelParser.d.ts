@@ -24,7 +24,7 @@ export default class ChannelParser {
     }): Promise<void>;
     fetchMoreVideos(): Promise<ListVideoInfo[]>;
     hasMoreVideos(): boolean;
-    toJSON(): ChannelMetadata;
+    toJSON(): ChannelInfo;
     private getProxyUrl;
     private static parseVideoData;
     static getNextPageAccessData(data: any, sortBy?: string): {
@@ -42,7 +42,7 @@ type ListVideoInfo = {
     title: string;
     thumbnail: string;
 };
-export type ChannelMetadata = {
+export type ChannelInfo = {
     id?: string;
     title?: string;
     description?: string;
