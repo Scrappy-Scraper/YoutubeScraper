@@ -172,3 +172,22 @@ export function getAllDescendantObjects(params: {
 }
 
 export type ObjNode = { [key in string]: any } | ObjNode[] | number | boolean | string | null | undefined;
+
+export async function downloadAsFile(url: string, filename: string) {
+    // NOTE: this only works on node.js
+    let fs = await import("fs");
+
+    let res = await fetch(url, { method: 'GET' });
+    while(res.redirected) res = await fetch(res.url, { method: 'GET' });
+
+    const reader = res.body!.getReader();
+    let data: ReadableStreamReadResult<Uint8Array<ArrayBufferLike>> = await reader.read();
+
+    // @ts-ignore
+    const fileStream = fs.createWriteStream(filename);
+    while (!data.done) {
+        fileStream.write(Buffer.from(data.value));
+        data = await reader.read();
+    }
+    fileStream.end();
+}

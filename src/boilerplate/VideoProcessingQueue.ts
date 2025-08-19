@@ -3,21 +3,10 @@ import PromiseQueue, {
     InputParam_OnTaskSuccess as Input_OnTaskSuccess,
     InputParam_OnTaskFail as Input_OnTaskFail,
 } from "../PromiseQueue.js";
-import VideoParser, {Transcript} from "../VideoParser.js";
+import VideoParser, {Transcript, VideoInfo} from "../VideoParser.js";
 
 export type VideoProcessingQueueInput = {videoId: string};     // Input data type for each of the processing task
-export type VideoProcessingQueueOutPut = { // Response data type
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    length: number;
-    viewCount: number;
-    channelId: string;
-    author: string;
-    isPrivate: boolean;
-    transcripts: Transcript[]
-};
+export type VideoProcessingQueueOutPut = VideoInfo;
 export type CallbackData = {taskResponse: VideoProcessingQueueOutPut} & BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export function make(params: {
     concurrency?: number; // number of tasks that can be in_progress at the same time. Before increasing this number, put in Proxy URL below

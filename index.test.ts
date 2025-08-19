@@ -1,5 +1,6 @@
 import {ChannelProcessingQueue, VideoProcessingQueue, YouTubeUrl} from "./src";
 import fs from "fs";
+import {downloadAsFile} from "./src/utils";
 
 export const writeToFile = (path: string, content: string) => {
     // create folder if not exists
@@ -30,12 +31,13 @@ const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<stri
 const videoProcessingQueue = VideoProcessingQueue.make({
     concurrency: 3,
     getChannelProcessingQueue: () => { return channelProcessingQueue }, // include this line to automatically parse the info of the channel
-    // proxyUrlGenerator, // TODO: Un-comment this line when you have filled-in the proxy url above
+    // proxyUrlGenerator, // TODO: Optional: Un-comment this line when you have filled-in the proxy url above
     shouldLogTaskAlreadyAddedWarning: true,
     // transcriptLanguageLimit: 3,
     // preferredLanguages: ["en", "es", "zh"],
     onTaskSuccess: async (data: VideoProcessingQueue.CallbackData) => {
         const {taskResponse, taskId, taskInputData, promiseQueue} = data;
+        // await downloadAsFile(taskResponse.mediaFiles[0].url, `./output/videoFile_${taskResponse.id}.mp4`) // uncomment this line to test the file download
         writeToFile(`./output/video_${taskResponse.id}.json`, JSON.stringify(taskResponse, null, 4));
         await VideoProcessingQueue.defaultOnTaskSuccess(data);
     }

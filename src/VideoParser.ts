@@ -282,6 +282,7 @@ export type VideoInfo = {
     description: string;
     thumbnail: string;
     mediaFiles: ({
+        "url": string;
         "mimeType": string;
         "bitrate": number;
         "width"?: number;

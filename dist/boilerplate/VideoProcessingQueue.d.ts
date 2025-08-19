@@ -1,20 +1,9 @@
 import PromiseQueue, { BasePromiseQueueCallbackData, InputParam_OnTaskSuccess as Input_OnTaskSuccess, InputParam_OnTaskFail as Input_OnTaskFail } from "../PromiseQueue.js";
-import { Transcript } from "../VideoParser.js";
+import { VideoInfo } from "../VideoParser.js";
 export type VideoProcessingQueueInput = {
     videoId: string;
 };
-export type VideoProcessingQueueOutPut = {
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    length: number;
-    viewCount: number;
-    channelId: string;
-    author: string;
-    isPrivate: boolean;
-    transcripts: Transcript[];
-};
+export type VideoProcessingQueueOutPut = VideoInfo;
 export type CallbackData = {
     taskResponse: VideoProcessingQueueOutPut;
 } & BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
@@ -28,7 +17,7 @@ export declare function make(params: {
     getChannelProcessingQueue?: () => PromiseQueue<any, any>;
     proxyUrlGenerator?: (sessionId?: string | null | undefined) => Promise<string>;
     shouldLogTaskAlreadyAddedWarning?: boolean;
-}): PromiseQueue<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
+}): PromiseQueue<VideoProcessingQueueInput, VideoInfo>;
 export type InputParams_OnTaskStart = BasePromiseQueueCallbackData<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;
 export declare function defaultOnTaskStart(params: InputParams_OnTaskStart): Promise<void>;
 export type InputParams_OnTaskSuccess = Input_OnTaskSuccess<VideoProcessingQueueInput, VideoProcessingQueueOutPut>;

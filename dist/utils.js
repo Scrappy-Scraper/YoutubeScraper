@@ -139,3 +139,19 @@ export function getAllDescendantObjects(params) {
     }
     return descendantNodes;
 }
+export async function downloadAsFile(url, filename) {
+    // NOTE: this only works on node.js
+    let fs = await import("fs");
+    let res = await fetch(url, { method: 'GET' });
+    while (res.redirected)
+        res = await fetch(res.url, { method: 'GET' });
+    const reader = res.body.getReader();
+    let data = await reader.read();
+    // @ts-ignore
+    const fileStream = fs.createWriteStream(filename);
+    while (!data.done) {
+        fileStream.write(Buffer.from(data.value));
+        data = await reader.read();
+    }
+    fileStream.end();
+}
