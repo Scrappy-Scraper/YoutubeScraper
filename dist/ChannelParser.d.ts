@@ -51,5 +51,6 @@ export type ChannelInfo = {
     channelUrl?: string;
     vanityChannelUrl?: string;
     videos?: ListVideoInfo[];
+    data_fetched_time: number;
 };
 export {};

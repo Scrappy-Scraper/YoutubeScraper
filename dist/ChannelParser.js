@@ -55,6 +55,7 @@ export default class ChannelParser {
             rssUrl: channelRawMetadata.rssUrl ?? '',
             channelUrl: channelRawMetadata.channelUrl ?? '',
             vanityChannelUrl: channelRawMetadata.vanityChannelUrl ?? '',
+            data_fetched_time: Math.round((new Date()).getTime() / 1000),
         };
         let newVideos = ChannelParser.extractVideos(contents).map((v) => ChannelParser.parseVideoData(v));
         for (let newVid of newVideos) {
@@ -106,6 +107,7 @@ export default class ChannelParser {
         return {
             ...this._metadata,
             videos: Array.from(this._videos.values()),
+            data_fetched_time: Math.round((new Date()).getTime() / 1000),
         };
     }
     async getProxyUrl(sessionId = undefined) {

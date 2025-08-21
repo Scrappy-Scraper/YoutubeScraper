@@ -79,6 +79,7 @@ export default class ChannelParser {
             rssUrl: channelRawMetadata.rssUrl ?? '',
             channelUrl: channelRawMetadata.channelUrl ?? '',
             vanityChannelUrl: channelRawMetadata.vanityChannelUrl ?? '',
+            data_fetched_time: Math.round((new Date()).getTime() / 1000),
         };
 
         let newVideos = ChannelParser.extractVideos(contents).map((v) => ChannelParser.parseVideoData(v));
@@ -134,6 +135,7 @@ export default class ChannelParser {
         return {
             ...this._metadata,
             videos: Array.from(this._videos.values()),
+            data_fetched_time: Math.round((new Date()).getTime() / 1000),
         };
     }
 
@@ -217,4 +219,5 @@ export type ChannelInfo = {
     channelUrl?: string;
     vanityChannelUrl?: string;
     videos?: ListVideoInfo[];
+    data_fetched_time: number,
 };

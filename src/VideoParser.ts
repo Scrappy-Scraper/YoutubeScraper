@@ -189,6 +189,7 @@ export default class VideoParser {
             isPrivate: videoDetails.isPrivate ?? false,
             transcripts: this._transcripts ?? [],
             availableTranscripts: this.availableCaptions,
+            data_fetched_time: Math.round((new Date()).getTime() / 1000),
         };
     }
 
@@ -301,4 +302,5 @@ export type VideoInfo = {
     isPrivate: boolean;
     transcripts: Transcript[];
     availableTranscripts: {name: string, languageCode: string, isGenerated: boolean}[];
+    data_fetched_time: number;
 }

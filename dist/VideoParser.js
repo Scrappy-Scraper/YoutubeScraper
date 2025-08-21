@@ -161,6 +161,7 @@ export default class VideoParser {
             isPrivate: videoDetails.isPrivate ?? false,
             transcripts: this._transcripts ?? [],
             availableTranscripts: this.availableCaptions,
+            data_fetched_time: Math.round((new Date()).getTime() / 1000),
         };
     }
     async getProxyUrl(sessionId = undefined) {

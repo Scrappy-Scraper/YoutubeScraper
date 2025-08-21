@@ -72,4 +72,5 @@ export type VideoInfo = {
         languageCode: string;
         isGenerated: boolean;
     }[];
+    data_fetched_time: number;
 };
