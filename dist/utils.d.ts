@@ -33,3 +33,4 @@ export type ObjNode = {
     [key in string]: any;
 } | ObjNode[] | number | boolean | string | null | undefined;
 export declare function downloadAsFile(url: string, filename: string): Promise<void>;
+export declare function isTrue(val: any): boolean;

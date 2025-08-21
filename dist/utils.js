@@ -155,3 +155,16 @@ export async function downloadAsFile(url, filename) {
     }
     fileStream.end();
 }
+export function isTrue(val) {
+    if (typeof val === "string") {
+        const lower = val.toLowerCase();
+        return (lower === "true" || lower === "yes" || lower === "1" || lower === "t");
+    }
+    else if (typeof val === "boolean") {
+        return val;
+    }
+    else if (typeof val === "number") {
+        return val === 1;
+    }
+    return false;
+}

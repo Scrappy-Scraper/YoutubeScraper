@@ -1,6 +1,6 @@
 {
     "name": "@scrappy-scraper/youtube_scraper",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "description": "YouTube Scraper. Video subtitle and metadata. Channel info and list of videos",
     "main": "dist/index.js",
     "type": "module",

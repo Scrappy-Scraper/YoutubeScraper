@@ -60,6 +60,8 @@ export type VideoInfo = {
     })[];
     uploadedTime: number | null;
     length: number;
+    isLive: boolean;
+    isLiveContent: boolean;
     viewCount: number;
     channelId: string;
     author: string;

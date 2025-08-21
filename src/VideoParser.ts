@@ -1,5 +1,5 @@
 import {DOMParser} from "xmldom";
-import {makeHttpRequest, raceRequests, unescapeHtml} from "./utils.js";
+import {isTrue, makeHttpRequest, raceRequests, unescapeHtml} from "./utils.js";
 import {md5} from "js-md5";
 import extractInnerTubeApiKeyFromHtml from "./extractInnerTubeApiKeyFromHtml.js";
 
@@ -181,6 +181,8 @@ export default class VideoParser {
             mediaFiles,
             uploadedTime,
             length: videoDetails.lengthSeconds ? parseInt(videoDetails.lengthSeconds, 10) : 0,
+            isLive: isTrue(videoDetails.isLive),
+            isLiveContent: isTrue(videoDetails.isLiveContent),
             viewCount: videoDetails.viewCount ? parseInt(videoDetails.viewCount, 10) : 0,
             channelId: videoDetails.channelId ?? '',
             author: videoDetails.author ?? '',
@@ -291,6 +293,8 @@ export type VideoInfo = {
     } & {[key in string]: any})[];
     uploadedTime: number | null;
     length: number;
+    isLive: boolean;
+    isLiveContent: boolean;
     viewCount: number;
     channelId: string;
     author: string;
