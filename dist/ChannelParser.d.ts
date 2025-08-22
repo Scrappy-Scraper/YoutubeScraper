@@ -37,11 +37,22 @@ export default class ChannelParser {
         [key in string]: any;
     }[];
 }
-type ListVideoInfo = {
+export type ListVideoInfo = {
     videoId: string;
     title: string;
     thumbnail: string;
+    length?: number;
+    viewCount?: number;
+    age?: {
+        amount: number;
+        unit: TimeUnit;
+    };
 };
+export type TimeUnit = "second" | "minute" | "hour" | "day" | "week" | "month" | "year";
+export declare function parseAgeText(ageString: string): {
+    amount: number;
+    unit: TimeUnit;
+} | undefined;
 export type ChannelInfo = {
     id?: string;
     title?: string;
@@ -53,4 +64,3 @@ export type ChannelInfo = {
     videos?: ListVideoInfo[];
     data_fetched_time: number;
 };
-export {};

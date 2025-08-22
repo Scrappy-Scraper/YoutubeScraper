@@ -157,7 +157,34 @@ export default class ChannelParser {
         const {videoId} = data;
         const title = data.title.runs[0].text;
         const thumbnail = data.thumbnail.thumbnails[0].url;
-        return {videoId, title, thumbnail};
+
+        // view count
+        let viewCount: number|undefined = parseInt((data.viewCountText?.simpleText ?? "").toLowerCase().replaceAll(",", "").replaceAll(".", "").replaceAll("views").trim());
+        if(isNaN(viewCount)) viewCount = undefined;
+
+        // length (in seconds)
+        let lengthText = data.lengthText?.simpleText ?? null;
+        let length: number|undefined = undefined;
+        if(lengthText) {
+            let lengthParts = lengthText.split(":");
+            if(lengthParts.length === 2) {
+                length = parseInt(lengthParts[0]) * 60 + parseInt(lengthParts[1]);
+            } else if(lengthParts.length === 3) {
+                length = parseInt(lengthParts[0]) * 3600 + parseInt(lengthParts[1]) * 60 + parseInt(lengthParts[2]);
+            } else if(lengthParts.length === 4) {
+                length = parseInt(lengthParts[0]) * 86400 + parseInt(lengthParts[1]) * 3600 + parseInt(lengthParts[2]) * 60 + parseInt(lengthParts[3]);
+            } else {
+                length = undefined;
+            }
+        }
+
+        // age
+        let age: {amount: number, unit: TimeUnit}|undefined = undefined;
+        let ageText = data.publishedTimeText?.simpleText ?? null;
+        if(ageText) {
+            age = parseAgeText(ageText);
+        }
+        return {videoId, title, thumbnail, viewCount, length, age};
     }
 
     static getNextPageAccessData(data: any, sortBy?: string) {
@@ -205,11 +232,58 @@ export default class ChannelParser {
     }
 }
 
-type ListVideoInfo = {
+export type ListVideoInfo = {
     videoId: string;
     title: string;
     thumbnail: string;
+    length?: number;
+    viewCount?: number;
+    age?: {amount: number, unit: TimeUnit};
 };
+export type TimeUnit = "second" | "minute" | "hour" | "day" | "week" | "month" | "year";
+export function parseAgeText(ageString: string): {amount: number, unit: TimeUnit}|undefined {
+    let ageStringParts = ageString.split(" ");
+    if(ageStringParts.length !== 3) return undefined;
+    let numPart: number|undefined = parseInt(ageStringParts[0]);
+    if(isNaN(numPart)) return undefined;
+
+    let unitPart: string = ageStringParts[1];
+    let unit: TimeUnit|undefined = undefined;
+    switch(unitPart.toLowerCase()) {
+        case "second":
+        case "seconds":
+            unit = "second";
+            break;
+        case "minute":
+        case "minutes":
+            unit = "minute";
+            break;
+        case "hour":
+        case "hours":
+            unit = "hour";
+            break;
+        case "day":
+        case "days":
+            unit = "day";
+            break;
+        case "week":
+        case "weeks":
+            unit = "week";
+            break;
+        case "month":
+        case "months":
+            unit = "month";
+            break;
+        case "year":
+        case "years":
+            unit = "year";
+            break;
+        default:
+            return undefined;
+    }
+
+    return {amount: numPart, unit};
+}
 export type ChannelInfo = {
     id?: string;
     title?: string;
