@@ -1,5 +1,5 @@
 import { reAdjustYouTubeChannelId } from "./YouTubeUrl.js";
-import { findInObject, getAllDescendantObjects, getJsonFromHtml, makeHttpRequest, raceRequests, unescapeHtml } from "./utils.js";
+import { fallbackValue, findInObject, getAllDescendantObjects, getJsonFromHtml, makeHttpRequest, raceRequests, unescapeHtml } from "./utils.js";
 import extractInnerTubeApiKeyFromHtml from "./extractInnerTubeApiKeyFromHtml.js";
 import { md5 } from "js-md5";
 export default class ChannelParser {
@@ -52,6 +52,7 @@ export default class ChannelParser {
             title: channelRawMetadata.title ?? '',
             description: channelRawMetadata.description ?? '',
             thumbnail: channelRawMetadata.avatar.thumbnails[0].url ?? '',
+            banner: fallbackValue(pageData, "header.pageHeaderRenderer.content.pageHeaderViewModel.banner.imageBannerViewModel.image.sources[0].url", null),
             rssUrl: channelRawMetadata.rssUrl ?? '',
             channelUrl: channelRawMetadata.channelUrl ?? '',
             vanityChannelUrl: channelRawMetadata.vanityChannelUrl ?? '',

@@ -184,3 +184,47 @@ export function isTrue(val: any){
     }
     return false;
 }
+
+
+export function fallbackValue<T>(val: any, path: string|null = null, defaultVal: T|null = null): T|null {
+    let route: string[] = [];
+
+    if (path !== null) {
+        let paths: string[] = path.split(".");
+        paths.forEach((currentPath) => {
+            let leftSquareBracketInd = currentPath.indexOf("[");
+            let rightSquareBracketInd = currentPath.indexOf("]");
+
+            if (leftSquareBracketInd === -1) {
+                route.push(currentPath)
+            } else {
+                let fieldName = currentPath.slice(0, leftSquareBracketInd);
+                if (fieldName !== "") {
+                    route.push(fieldName);
+                }
+
+                while (leftSquareBracketInd !== -1) {
+                    let numString = currentPath.slice(leftSquareBracketInd + 1, rightSquareBracketInd);
+                    route.push(parseInt(numString).toString());
+
+                    currentPath = currentPath.slice(rightSquareBracketInd + 1);
+                    leftSquareBracketInd = currentPath.indexOf("[");
+                    rightSquareBracketInd = currentPath.indexOf("]");
+                }
+            }
+        });
+    }
+
+    let routeInd = 0;
+    while (routeInd < route.length && val !== null && val !== undefined) {
+        let accessor = route[routeInd];
+        val = val[accessor];
+        routeInd++;
+    }
+
+    if (val === null || val === undefined) {
+        val = defaultVal;
+    }
+
+    return val;
+}

@@ -1,5 +1,6 @@
 import {reAdjustYouTubeChannelId} from "./YouTubeUrl.js";
 import {
+    fallbackValue,
     findInObject,
     getAllDescendantObjects,
     getJsonFromHtml,
@@ -76,6 +77,7 @@ export default class ChannelParser {
             title: channelRawMetadata.title ?? '',
             description: channelRawMetadata.description ?? '',
             thumbnail: channelRawMetadata.avatar.thumbnails[0].url ?? '',
+            banner: fallbackValue<string|null>(pageData, "header.pageHeaderRenderer.content.pageHeaderViewModel.banner.imageBannerViewModel.image.sources[0].url", null),
             rssUrl: channelRawMetadata.rssUrl ?? '',
             channelUrl: channelRawMetadata.channelUrl ?? '',
             vanityChannelUrl: channelRawMetadata.vanityChannelUrl ?? '',
@@ -289,6 +291,7 @@ export type ChannelInfo = {
     title?: string;
     description?: string;
     thumbnail?: string;
+    banner?: string|null;
     rssUrl?: string;
     channelUrl?: string;
     vanityChannelUrl?: string;

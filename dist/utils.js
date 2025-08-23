@@ -152,3 +152,39 @@ export function isTrue(val) {
     }
     return false;
 }
+export function fallbackValue(val, path = null, defaultVal = null) {
+    let route = [];
+    if (path !== null) {
+        let paths = path.split(".");
+        paths.forEach((currentPath) => {
+            let leftSquareBracketInd = currentPath.indexOf("[");
+            let rightSquareBracketInd = currentPath.indexOf("]");
+            if (leftSquareBracketInd === -1) {
+                route.push(currentPath);
+            }
+            else {
+                let fieldName = currentPath.slice(0, leftSquareBracketInd);
+                if (fieldName !== "") {
+                    route.push(fieldName);
+                }
+                while (leftSquareBracketInd !== -1) {
+                    let numString = currentPath.slice(leftSquareBracketInd + 1, rightSquareBracketInd);
+                    route.push(parseInt(numString).toString());
+                    currentPath = currentPath.slice(rightSquareBracketInd + 1);
+                    leftSquareBracketInd = currentPath.indexOf("[");
+                    rightSquareBracketInd = currentPath.indexOf("]");
+                }
+            }
+        });
+    }
+    let routeInd = 0;
+    while (routeInd < route.length && val !== null && val !== undefined) {
+        let accessor = route[routeInd];
+        val = val[accessor];
+        routeInd++;
+    }
+    if (val === null || val === undefined) {
+        val = defaultVal;
+    }
+    return val;
+}

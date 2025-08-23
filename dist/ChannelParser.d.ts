@@ -58,6 +58,7 @@ export type ChannelInfo = {
     title?: string;
     description?: string;
     thumbnail?: string;
+    banner?: string | null;
     rssUrl?: string;
     channelUrl?: string;
     vanityChannelUrl?: string;

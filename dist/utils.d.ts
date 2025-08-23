@@ -33,3 +33,4 @@ export type ObjNode = {
     [key in string]: any;
 } | ObjNode[] | number | boolean | string | null | undefined;
 export declare function isTrue(val: any): boolean;
+export declare function fallbackValue<T>(val: any, path?: string | null, defaultVal?: T | null): T | null;
