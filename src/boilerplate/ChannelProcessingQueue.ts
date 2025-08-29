@@ -49,6 +49,7 @@ export function make(params: {
         while (channelParser.hasMoreVideos() && channelParser.videos.length < numVideos) await channelParser.fetchMoreVideos();
 
         const data = channelParser.toJSON();
+        data.videos
         let extractedChannelId = data.id;
         if(extractedChannelId) {
             extractedChannelId = reAdjustYouTubeChannelId(extractedChannelId);

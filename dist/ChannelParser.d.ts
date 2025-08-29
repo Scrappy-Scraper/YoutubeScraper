@@ -1,3 +1,5 @@
+import { ListVideoInfo } from "./type/ListVideoInfo.js";
+import { ChannelInfo } from "./type/ChannelInfo.js";
 export default class ChannelParser {
     get videos(): ListVideoInfo[];
     get channelId(): string;
@@ -37,31 +39,3 @@ export default class ChannelParser {
         [key in string]: any;
     }[];
 }
-export type ListVideoInfo = {
-    videoId: string;
-    title: string;
-    thumbnail: string;
-    length?: number;
-    viewCount?: number;
-    age?: {
-        amount: number;
-        unit: TimeUnit;
-    };
-};
-export type TimeUnit = "second" | "minute" | "hour" | "day" | "week" | "month" | "year";
-export declare function parseAgeText(ageString: string): {
-    amount: number;
-    unit: TimeUnit;
-} | undefined;
-export type ChannelInfo = {
-    id?: string;
-    title?: string;
-    description?: string;
-    thumbnail?: string;
-    banner?: string | null;
-    rssUrl?: string;
-    channelUrl?: string;
-    vanityChannelUrl?: string;
-    videos?: ListVideoInfo[];
-    data_fetched_time: number;
-};

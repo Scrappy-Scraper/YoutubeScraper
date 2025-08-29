@@ -1,4 +1,4 @@
-import {ChannelProcessingQueue, VideoProcessingQueue, YouTubeUrl} from "./src";
+import {ChannelProcessingQueue, VideoProcessingQueue, YouTubeUrl, SearchHandler} from "./src";
 import fs from "fs";
 
 export const writeToFile = (path: string, content: string) => {
@@ -116,5 +116,21 @@ for(let url of urls) {
 
 await videoProcessingQueue.allDone();
 await channelProcessingQueue.allDone();
+
+
+let searchHandler: SearchHandler = new SearchHandler();
+await searchHandler.search({
+    query: "Rick Astley",
+});
+let pageNumber = 1;
+while (searchHandler.hasMoreItems() && pageNumber < 2) {
+    await searchHandler.fetchMoreItems();
+    pageNumber += 1;
+}
+let searchResult = searchHandler.toJSON();
+searchResult = {query: searchHandler.query, ...searchResult}
+writeToFile(`./output/searchResult.json`, JSON.stringify(searchResult, null, 4));
+
+
 
 console.log("\n🎉 All Processing Done!\nCheck ./output folder for the results");
