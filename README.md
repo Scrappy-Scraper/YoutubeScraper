@@ -1,7 +1,16 @@
 # Youtube Scraper
-Video -> Subtitle, title, description, views, thumbnail, duration, viewCount, channelId, etc
 
-Channel -> Title, description, thumbnail, list of videos, etc
+| feature            |                Video                 |    Channel     |
+|--------------------|:------------------------------------:|:--------------:|
+| title              |                  ✅                   |       ✅        |
+| description        |                  ✅                   |       ✅        |
+| thumbnail          |                  ✅                   |       ✅        |
+| transcripts        |                  ✅                   |     N / A      |
+| video download url |                  ✅                   |     N / A      |
+| other fields       | views, duration, viewCount, and more | list of videos |
+
+Also supports YouTube search
+
 
 Try out this scraper for free on [Apify.com](https://apify.com/scrappy-scraper/youtubescraper-apify)
 
@@ -13,6 +22,8 @@ yarn add @scrappy-scraper/youtube_scraper       # yarn
 
 ## Environment
 Works in `Node.js` and `react-native`
+
+Works in Chrome extension when running on `youtube.com` page.
 
 Does not work in `browser` due to limited CORS setting from YouTube
 
@@ -49,7 +60,8 @@ console.log(channelParser.toJSON())
 ```typescript
 /* Perform YouTube Search */
 
-let searchHandler: SearchHandler = new SearchHandler();
+import { SearchHandler } from '@scrappy-scraper/youtube_scraper';
+let searchHandler = new SearchHandler();
 await searchHandler.search({ query: "Rick Astley" });
 
 if(searchHandler.hasMoreItems()) await searchHandler.fetchMoreItems(); // can use "while" instead of "if"
@@ -64,14 +76,14 @@ Session is supported by putting in `:sessionId` into the randomized segment of t
 
 For example:
 
-```markdown
+```typescript
 // Provided by Proxy provider:
-http://my_user_name_sid-adsfasdf:my_password@proxy.provider.io:port
-http://my_user_name_sid-qwerqwer:my_password@proxy.provider.io:port
-http://my_user_name_sid-zxcvzxcv:my_password@proxy.provider.io:port
+"http://my_user_name_sid-adsfasdf:my_password@proxy.provider.io:port"
+"http://my_user_name_sid-qwerqwer:my_password@proxy.provider.io:port"
+"http://my_user_name_sid-zxcvzxcv:my_password@proxy.provider.io:port"
 
 // What you put in:
-http://my_user_name_sid-:sessionId:my_password@proxy.provider.io:port
+"http://my_user_name_sid-:sessionId:my_password@proxy.provider.io:port"
 
 // create proxyUrlGenerator 
 const proxyUrlGenerator = async (sessionId: string|null|undefined): Promise<string> => {
