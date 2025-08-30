@@ -75,19 +75,12 @@ export default class SearchHandler {
         const contents = JSON.parse(response.text);
         this._nextPageAccessData = getNextPageAccessData(contents);
         const newItems = extractItems(contents).map(parseListItemData);
-        let extractItemId = (item) => {
-            if (item.hasOwnProperty("videoId"))
-                return item.videoId;
-            if (item.hasOwnProperty("channelId"))
-                return item.channelId;
-            return null;
-        };
-        let existingItemIds = new Set(this._items.map(extractItemId).filter(item => item !== null));
+        let existingItemIds = new Set(this._items.map(item => item.id).filter(item => item !== null));
         let itemsToAdd = [];
         for (let item of newItems) {
             if (item === null)
                 continue;
-            let itemId = extractItemId(item);
+            let itemId = item.id;
             if (itemId === null)
                 continue;
             if (existingItemIds.has(itemId))
@@ -149,7 +142,7 @@ function extractItems(pageDataContents) {
         const hasThumbnail = lowercasedKeys.includes('thumbnail'.toLowerCase()) ||
             lowercasedKeys.includes('thumbnails'.toLowerCase());
         const hasTitle = lowercasedKeys.includes('title'.toLowerCase());
-        return hasVideoId && hasThumbnail && hasTitle;
+        return hasVideoId && hasThumbnail && hasTitle && parentKey === "videoRenderer";
     };
     let isChannelMatch = (data) => {
         let { node, parentKey } = data;
@@ -163,7 +156,7 @@ function extractItems(pageDataContents) {
         const hasThumbnail = lowercasedKeys.includes('thumbnail'.toLowerCase()) ||
             lowercasedKeys.includes('thumbnails'.toLowerCase());
         const hasTitle = lowercasedKeys.includes('title'.toLowerCase());
-        return hasChannelId && hasThumbnail && hasTitle;
+        return hasChannelId && hasThumbnail && hasTitle && parentKey === "channelRenderer";
     };
     return getAllDescendantObjects({
         rootNode: pageDataContents,

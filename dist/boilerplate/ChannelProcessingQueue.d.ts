@@ -1,4 +1,5 @@
 import PromiseQueue, { BasePromiseQueueCallbackData } from "../PromiseQueue.js";
+import { ListVideoInfo } from "../type/ListVideoInfo.js";
 export type ChannelProcessingQueueInput = {
     channelId: string;
 };
@@ -10,11 +11,7 @@ export type ChannelProcessingQueueOutPut = {
     rssUrl?: string;
     channelUrl?: string;
     vanityChannelUrl?: string;
-    videos?: {
-        videoId: string;
-        thumbnail: string;
-        title: string;
-    }[];
+    videos?: ListVideoInfo[];
 };
 export type CallbackData = {
     taskResponse: ChannelProcessingQueueOutPut;

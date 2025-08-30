@@ -50,7 +50,7 @@ console.log(JSON.stringify(videoParser.toJSON())) // captions are inside this JS
 
 import { ChannelParser } from '@scrappy-scraper/youtube_scraper';
 const channelParser = new ChannelParser();
-await channelParser.load({ channelId: "@RickAstleyYT" })
+await channelParser.load({ channelId: "@RickAstleyYT" }); // channelId can be a handle or a regular id
 
 if(channelParser.hasMoreVideos()) await channelParser.fetchMoreVideos(); // can use "while" instead of "if"
 

@@ -163,7 +163,7 @@ export function getAllDescendantObjects(params: {
         // go over this root node's children
         const matched = isMatch({
             node: value,
-            parentKey,
+            parentKey: key,
         });
         if (matched) descendantNodes.push(value);
         descendantNodes.push(...getAllDescendantObjects({rootNode: value, isMatch, parentKey: key}));

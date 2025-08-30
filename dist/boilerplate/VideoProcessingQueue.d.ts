@@ -1,5 +1,5 @@
 import PromiseQueue, { BasePromiseQueueCallbackData, InputParam_OnTaskSuccess as Input_OnTaskSuccess, InputParam_OnTaskFail as Input_OnTaskFail } from "../PromiseQueue.js";
-import { VideoInfo } from "../VideoParser.js";
+import { VideoInfo } from "../type/VideoInfo.js";
 export type VideoProcessingQueueInput = {
     videoId: string;
 };

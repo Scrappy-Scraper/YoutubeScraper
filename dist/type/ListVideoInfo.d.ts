@@ -1,6 +1,7 @@
 import { TimeUnit } from "../helpers/parseAgeText.js";
 export type ListVideoInfo = {
-    videoId: string;
+    type: "video";
+    id: string;
     title: string;
     thumbnail: string;
     length?: number;

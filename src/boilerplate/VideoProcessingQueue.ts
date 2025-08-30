@@ -3,7 +3,9 @@ import PromiseQueue, {
     InputParam_OnTaskSuccess as Input_OnTaskSuccess,
     InputParam_OnTaskFail as Input_OnTaskFail,
 } from "../PromiseQueue.js";
-import VideoParser, {Transcript, VideoInfo} from "../VideoParser.js";
+import VideoParser from "../VideoParser.js";
+import {VideoInfo} from "../type/VideoInfo.js";
+import {Transcript} from "../type/Transcript.js";
 
 export type VideoProcessingQueueInput = {videoId: string};     // Input data type for each of the processing task
 export type VideoProcessingQueueOutPut = VideoInfo;

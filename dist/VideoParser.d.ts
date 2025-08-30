@@ -1,3 +1,5 @@
+import { VideoInfo } from "./type/VideoInfo.js";
+import { Transcript } from "./type/Transcript.js";
 export default class VideoParser {
     get videoId(): string;
     get channelId(): string;
@@ -32,45 +34,3 @@ export default class VideoParser {
     private getProxyUrl;
     private fetchVideoHtml;
 }
-export interface Transcript {
-    snippets: TranscriptSnippet[];
-    language: string;
-    language_code: string;
-    is_generated: boolean;
-}
-export interface TranscriptSnippet {
-    text: string;
-    start: number;
-    duration: number;
-}
-export type VideoInfo = {
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    mediaFiles: ({
-        "url": string;
-        "mimeType": string;
-        "bitrate": number;
-        "width"?: number;
-        "height"?: number;
-        "fps"?: number;
-    } & {
-        [key in string]: any;
-    })[];
-    uploadedTime: number | null;
-    length: number;
-    isLive: boolean;
-    isLiveContent: boolean;
-    viewCount: number;
-    channelId: string;
-    author: string;
-    isPrivate: boolean;
-    transcripts: Transcript[];
-    availableTranscripts: {
-        name: string;
-        languageCode: string;
-        isGenerated: boolean;
-    }[];
-    data_fetched_time: number;
-};

@@ -2,6 +2,8 @@ import {DOMParser} from "xmldom";
 import {isTrue, makeHttpRequest, raceRequests, unescapeHtml} from "./utils.js";
 import {md5} from "js-md5";
 import extractInnerTubeApiKeyFromHtml from "./extractInnerTubeApiKeyFromHtml.js";
+import {VideoInfo} from "./type/VideoInfo.js";
+import {Transcript, TranscriptSnippet} from "./type/Transcript.js";
 
 const languageByPopularity = ['en', 'zh', 'es', 'fr', 'ar', 'ja', 'ko', 'th', 'ru', 'hi'];
 
@@ -266,41 +268,3 @@ function parseTranscriptXml(xmlText: string): TranscriptSnippet[] {
         });
 }
 
-export interface Transcript {
-    snippets: TranscriptSnippet[];
-    language: string;
-    language_code: string;
-    is_generated: boolean;
-}
-
-export interface TranscriptSnippet {
-    text: string;
-    start: number;
-    duration: number;
-}
-
-export type VideoInfo = {
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    mediaFiles: ({
-        "url": string;
-        "mimeType": string;
-        "bitrate": number;
-        "width"?: number;
-        "height"?: number;
-        "fps"?: number;
-    } & {[key in string]: any})[];
-    uploadedTime: number | null;
-    length: number;
-    isLive: boolean;
-    isLiveContent: boolean;
-    viewCount: number;
-    channelId: string;
-    author: string;
-    isPrivate: boolean;
-    transcripts: Transcript[];
-    availableTranscripts: {name: string, languageCode: string, isGenerated: boolean}[];
-    data_fetched_time: number;
-}

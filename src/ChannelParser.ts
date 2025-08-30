@@ -27,9 +27,9 @@ export default class ChannelParser {
     private _proxyUrls: string[] = []; // list of available proxy urls to choose from
     private _proxyUrlGenerator: ((sessionId?: string | undefined | null) => Promise<string | undefined>) | null;
     private _metadata: ChannelInfo | null = null;
-    private _videos: Map<string, { videoId: string; thumbnail: string; title: string }> = new Map<
+    private _videos: Map<string, { id: string; type: "video", thumbnail: string; title: string }> = new Map<
         string,
-        { videoId: string; thumbnail: string; title: string }
+        { id: string; type: "video", thumbnail: string; title: string }
     >();
     private _headers: { [key: string]: string } = {};
     private static apiEndpoint: string = 'https://www.youtube.com/youtubei/v1/browse';
@@ -90,7 +90,7 @@ export default class ChannelParser {
         let newVideos = ChannelParser.extractVideos(contents).map((v) => ChannelParser.parseVideoData(v));
         for (let newVid of newVideos) {
             if (typeof newVid !== 'object' || newVid == null) continue;
-            let vId = newVid.videoId ?? null;
+            let vId = newVid.id ?? null;
             if (this._videos.has(vId)) continue;
             this._videos.set(vId, newVid);
         }
@@ -124,7 +124,7 @@ export default class ChannelParser {
         const newVideos = ChannelParser.extractVideos(contents).map((v) => ChannelParser.parseVideoData(v));
         for (let newVid of newVideos) {
             if (typeof newVid !== 'object' || newVid == null) continue;
-            let vId = newVid.videoId ?? null;
+            let vId = newVid.id ?? null;
             if (this._videos.has(vId)) continue;
             this._videos.set(vId, newVid);
         }
@@ -189,7 +189,7 @@ export default class ChannelParser {
         if(ageText) {
             age = parseAgeText(ageText);
         }
-        return {videoId, title, thumbnail, viewCount, length, age};
+        return {id: videoId, type: "video", title, thumbnail, viewCount, length, age};
     }
 
     static getNextPageAccessData(data: any, sortBy?: string) {

@@ -1,6 +1,7 @@
 
 export type ListChannelInfo = {
-    channelId: string;
+    type: "channel",
+    id: string;
     title: string;
     thumbnail: string;
     description: string;

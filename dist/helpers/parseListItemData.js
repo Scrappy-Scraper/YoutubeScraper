@@ -39,7 +39,7 @@ function parseListVideoItemData(data) {
     if (ageText) {
         age = parseAgeText(ageText);
     }
-    return { videoId, title, thumbnail, viewCount, length, age };
+    return { type: "video", id: videoId, title, thumbnail, viewCount, length, age };
 }
 function parseListChannelItemData(data) {
     let channelId = data.channelId;
@@ -47,7 +47,8 @@ function parseListChannelItemData(data) {
     let thumbnail = fallbackValue(data, "thumbnail.thumbnails", [])?.at(-1)?.url ?? "";
     let description = fallbackValue(data, "descriptionSnippet.runs", [])?.at(0)?.text ?? "";
     return {
-        channelId,
+        type: "channel",
+        id: channelId,
         title,
         thumbnail,
         description

@@ -63,7 +63,7 @@ export default class ChannelParser {
         for (let newVid of newVideos) {
             if (typeof newVid !== 'object' || newVid == null)
                 continue;
-            let vId = newVid.videoId ?? null;
+            let vId = newVid.id ?? null;
             if (this._videos.has(vId))
                 continue;
             this._videos.set(vId, newVid);
@@ -95,7 +95,7 @@ export default class ChannelParser {
         for (let newVid of newVideos) {
             if (typeof newVid !== 'object' || newVid == null)
                 continue;
-            let vId = newVid.videoId ?? null;
+            let vId = newVid.id ?? null;
             if (this._videos.has(vId))
                 continue;
             this._videos.set(vId, newVid);
@@ -156,7 +156,7 @@ export default class ChannelParser {
         if (ageText) {
             age = parseAgeText(ageText);
         }
-        return { videoId, title, thumbnail, viewCount, length, age };
+        return { id: videoId, type: "video", title, thumbnail, viewCount, length, age };
     }
     static getNextPageAccessData(data, sortBy) {
         const sortByPositions = { newest: 0, popular: 1, oldest: 2 };
