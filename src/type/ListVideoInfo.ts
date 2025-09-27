@@ -10,4 +10,5 @@ export type ListVideoInfo = {
     age?: { amount: number, unit: TimeUnit };
     channelThumbnail?: string|null;
     channelId?: string|null;
+    channelName?: string|null;
 };

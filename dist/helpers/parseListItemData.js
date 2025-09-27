@@ -39,8 +39,8 @@ function parseListVideoItemData(data) {
     if (ageText) {
         age = parseAgeText(ageText);
     }
-    let { thumbnailUrl: channelThumbnail, channelId } = parseVideoChannelData(data);
-    return { type: "video", id: videoId, title, thumbnail, viewCount, length, age, channelThumbnail, channelId };
+    let { thumbnailUrl: channelThumbnail, channelId, channelName } = parseVideoChannelData(data);
+    return { type: "video", id: videoId, title, thumbnail, viewCount, length, age, channelThumbnail, channelId, channelName };
 }
 function parseVideoChannelData(data) {
     let thumbnailUrl = null;
@@ -61,6 +61,7 @@ function parseVideoChannelData(data) {
         return null;
     };
     let channelId = null;
+    let channelName = null;
     // get channelId from "longBylineText" node
     let longBylineText = ((findInObject(data, "longBylineText") ?? {}).runs ?? [])[0] ?? {};
     channelId = parseChannelIdFromUrl(findInObject(longBylineText, "url") ?? "");
@@ -68,6 +69,8 @@ function parseVideoChannelData(data) {
         channelId = parseChannelIdFromUrl(findInObject(longBylineText, "canonicalBaseUrl") ?? "");
     if (channelId === null)
         channelId = findInObject(longBylineText, "browseId");
+    if (channelName === null)
+        channelName = findInObject(longBylineText, "text");
     // get channelId from "ownerText" node
     let ownerText = ((findInObject(data, "ownerText") ?? {}).runs ?? [])[0] ?? {};
     if (channelId === null)
@@ -76,6 +79,8 @@ function parseVideoChannelData(data) {
         channelId = parseChannelIdFromUrl(findInObject(ownerText, "canonicalBaseUrl") ?? "");
     if (channelId === null)
         channelId = findInObject(ownerText, "browseId");
+    if (channelName === null)
+        channelName = findInObject(ownerText, "text");
     // get channelId from "ownerText" node
     let shortBylineText = ((findInObject(data, "shortBylineText") ?? {}).runs ?? [])[0] ?? {};
     if (channelId === null)
@@ -84,6 +89,8 @@ function parseVideoChannelData(data) {
         channelId = parseChannelIdFromUrl(findInObject(shortBylineText, "canonicalBaseUrl") ?? "");
     if (channelId === null)
         channelId = findInObject(shortBylineText, "browseId");
+    if (channelName === null)
+        channelName = findInObject(shortBylineText, "text");
     // get channelId from "channelThumbnailData" node
     if (channelId === null)
         channelId = parseChannelIdFromUrl(findInObject(channelThumbnailData, "url") ?? "");
@@ -97,7 +104,7 @@ function parseVideoChannelData(data) {
         channelId = parseChannelIdFromUrl(findInObject(avatarWebCommandMetadata, "url") ?? "");
     if (channelId === null)
         channelId = findInObject(avatarWebCommandMetadata, "browseId");
-    return { thumbnailUrl, channelId };
+    return { thumbnailUrl, channelId, channelName };
 }
 function parseListChannelItemData(data) {
     let channelId = data.channelId;

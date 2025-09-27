@@ -12,4 +12,5 @@ export type ListVideoInfo = {
     };
     channelThumbnail?: string | null;
     channelId?: string | null;
+    channelName?: string | null;
 };
