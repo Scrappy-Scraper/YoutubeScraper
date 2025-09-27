@@ -4,4 +4,5 @@ export type ListChannelInfo = {
     title: string;
     thumbnail: string;
     description: string;
+    handle: string | null;
 };

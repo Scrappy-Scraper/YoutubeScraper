@@ -112,12 +112,37 @@ function parseListChannelItemData(data: { [key in string]: any }): ListChannelIn
         height: number
     }[]>(data, "thumbnail.thumbnails", [])?.at(-1)?.url ?? "";
     let description = fallbackValue<{ text: string }[]>(data, "descriptionSnippet.runs", [])?.at(0)?.text ?? "";
-
+    let handle = extractChannelHandle(data);
     return {
         type: "channel",
         id: channelId,
         title,
         thumbnail,
-        description
+        description,
+        handle,
     }
+}
+function extractChannelHandle(data: { [key in string]: any }): string|null {
+    let handle = null;
+
+    let navigationEndpoint = findInObject(data, "navigationEndpoint") ?? {};
+    handle = extractChannelHandleFromString(findInObject(navigationEndpoint, "url") ?? "");
+    if(handle === null) handle = extractChannelHandleFromString(findInObject(navigationEndpoint, "canonicalBaseUrl") ?? "");
+
+    let shortBylineText = findInObject(data, "shortBylineText") ?? {};
+    if(handle === null) handle = extractChannelHandleFromString(findInObject(shortBylineText, "url") ?? "");
+    if(handle === null) handle = extractChannelHandleFromString(findInObject(shortBylineText, "canonicalBaseUrl") ?? "");
+
+    let subscriberCountText = findInObject(data, "subscriberCountText") ?? {};
+    if(handle === null) handle = extractChannelHandleFromString(findInObject(subscriberCountText, "simpleText") ?? "");
+
+    let longBylineText = findInObject(data, "longBylineText") ?? {};
+    if(handle === null) handle = extractChannelHandleFromString(findInObject(longBylineText, "url") ?? "");
+    if(handle === null) handle = extractChannelHandleFromString(findInObject(longBylineText, "canonicalBaseUrl") ?? "");
+
+    return handle;
+}
+function extractChannelHandleFromString(val: string): string|null {
+    if(!val.includes("@")) return null;
+    return (val.split("@").at(-1) ?? "").split("/").at(0) ?? null;
 }
