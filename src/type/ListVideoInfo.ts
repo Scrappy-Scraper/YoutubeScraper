@@ -8,4 +8,6 @@ export type ListVideoInfo = {
     length?: number;
     viewCount?: number;
     age?: { amount: number, unit: TimeUnit };
+    channelThumbnail?: string|null;
+    channelId?: string|null;
 };

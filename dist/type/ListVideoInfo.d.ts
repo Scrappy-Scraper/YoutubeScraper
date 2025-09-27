@@ -10,4 +10,6 @@ export type ListVideoInfo = {
         amount: number;
         unit: TimeUnit;
     };
+    channelThumbnail?: string | null;
+    channelId?: string | null;
 };
