@@ -35,7 +35,7 @@ export default class ChannelParser {
             const proxyUrl = await this.getProxyUrl();
             return await makeHttpRequest({ url, proxyUrl, method: 'GET' });
         };
-        let response = await raceRequests({ generateRequest: makeMetaDataRequest, amount: 3, waitTime: 5 });
+        let response = await raceRequests({ generateRequest: makeMetaDataRequest, amount: params.retryCount ?? 1, waitTime: 5 });
         this._proxyUrl = response.proxyUrl;
         let html = unescapeHtml(response.text);
         this._apiKey = extractInnerTubeApiKeyFromHtml(html);

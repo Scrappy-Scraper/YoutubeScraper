@@ -49,7 +49,7 @@ export default class ChannelParser {
         this._proxyUrlGenerator = params.proxyUrlGenerator ?? null;
     }
 
-    async load(params: { channelId: string }) {
+    async load(params: { channelId: string, retryCount?: number }) {
         if (this._channelId !== null) return; // channel already loaded
         const channelId = reAdjustYouTubeChannelId(params.channelId);
         let baseUrl: string = `https://www.youtube.com/${channelId}`;
@@ -60,7 +60,7 @@ export default class ChannelParser {
             const proxyUrl = await this.getProxyUrl();
             return await makeHttpRequest({url, proxyUrl, method: 'GET'});
         };
-        let response = await raceRequests({generateRequest: makeMetaDataRequest, amount: 3, waitTime: 5});
+        let response = await raceRequests({generateRequest: makeMetaDataRequest, amount: params.retryCount ?? 1, waitTime: 5});
         this._proxyUrl = response.proxyUrl;
         let html = unescapeHtml(response.text);
         this._apiKey = extractInnerTubeApiKeyFromHtml(html);

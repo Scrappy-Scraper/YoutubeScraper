@@ -23,6 +23,7 @@ export default class VideoParser {
     });
     load(params: {
         videoId: string;
+        retryCount?: number;
     }): Promise<{
         [key in string]: any;
     }>;

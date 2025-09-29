@@ -23,6 +23,7 @@ export default class ChannelParser {
     });
     load(params: {
         channelId: string;
+        retryCount?: number;
     }): Promise<void>;
     fetchMoreVideos(): Promise<ListVideoInfo[]>;
     hasMoreVideos(): boolean;

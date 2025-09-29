@@ -43,8 +43,8 @@ export default class VideoParser {
         this._cookies = params.cookies || {};
     }
 
-    async load(params: { videoId: string }): Promise<{ [key in string]: any }> {
-        const {videoId} = params;
+    async load(params: { videoId: string, retryCount?: number }): Promise<{ [key in string]: any }> {
+        const {videoId, retryCount = 1} = params;
         const html = await this.fetchVideoHtml(videoId);
         const apiKey = extractInnerTubeApiKeyFromHtml(html);
         const url = `https://www.youtube.com/youtubei/v1/player?key=${apiKey}`;
@@ -72,7 +72,7 @@ export default class VideoParser {
             }
             return metaData;
         };
-        const metaData = await raceRequests({generateRequest: makeMetaDataRequest, amount: 3, waitTime: 5});
+        const metaData = await raceRequests({generateRequest: makeMetaDataRequest, amount: retryCount, waitTime: 5});
 
         const {playabilityStatus} = metaData;
         if (playabilityStatus && playabilityStatus.status !== 'OK') {
