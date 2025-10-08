@@ -1,5 +1,5 @@
 import {DOMParser} from "xmldom";
-import {isTrue, makeHttpRequest, raceRequests, unescapeHtml} from "./utils.js";
+import {extractErrorMessage, isTrue, makeHttpRequest, raceRequests, unescapeHtml} from "./utils.js";
 import {md5} from "js-md5";
 import extractInnerTubeApiKeyFromHtml from "./extractInnerTubeApiKeyFromHtml.js";
 import {VideoInfo} from "./type/VideoInfo.js";
@@ -65,14 +65,19 @@ export default class VideoParser {
             let metaData: { [key in string]: any } = JSON.parse(response.text);
             const {playabilityStatus} = metaData;
             if (playabilityStatus && playabilityStatus.status !== 'OK') {
-                if (playabilityStatus.reason === 'This video is unavailable') {
+                if (playabilityStatus.reason.includes("unavailable") || playabilityStatus.reason.includes("not available") || playabilityStatus.reason.includes("not exist")) {
                     throw new Error(`Video ${videoId} is unavailable`);
                 }
                 throw new Error(`Request failed for video ${videoId}: ${playabilityStatus.reason}`);
             }
             return metaData;
         };
-        const metaData = await raceRequests({generateRequest: makeMetaDataRequest, amount: retryCount, waitTime: 5});
+        const metaData = await raceRequests({
+            generateRequest: makeMetaDataRequest,
+            amount: retryCount,
+            waitTime: 5,
+            shouldRetry: (e: any) => {return !extractErrorMessage(e).includes("unavailable")}
+        });
 
         const {playabilityStatus} = metaData;
         if (playabilityStatus && playabilityStatus.status !== 'OK') {

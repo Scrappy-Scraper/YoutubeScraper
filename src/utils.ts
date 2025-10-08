@@ -6,30 +6,50 @@ export async function raceRequests(params: {
     generateRequest: () => Promise<any>;
     amount: number;
     waitTime?: number; // time in seconds
+    shouldRetry?: ((e: any) => boolean);
 }) {
     const {generateRequest, amount, waitTime} = params;
+    let shouldRetry = params.shouldRetry ?? ((e: any) => true);
     if (amount === 0) throw new Error('Amount of requests must be greater than 0');
 
     const tasks: Promise<any>[] = [];
     let isDone = false;
+    let retry = true;
     for (let ind = 0; ind < amount; ind++) {
         if (isDone) break; // if one of the existing is done successfully, stop adding new tasks
         const task = generateRequest();
         tasks.push(task);
         task
             .then(() => {isDone = true;})
-            .catch(() => {});
+            .catch((e) => {retry = shouldRetry(e)});
 
         if(waitTime) {
             let waitStart = new Date().getTime();
-            let sleepDuration = Math.max(10, waitTime / 100 * 1000); // at least 10 ms
             while (new Date().getTime() - waitStart < waitTime * 1000) {
                 if(isDone) return Promise.any(tasks);
-                await sleepAsync(sleepDuration);
+                if(await allPromisesFailed(tasks)) break;
+                await sleepAsync(10);
             }
         }
+        if(!retry) break;
+        new Promise(resolve => setTimeout(resolve, waitTime));
     }
     return Promise.any(tasks);
+}
+async function getPromiseStatus(promise: Promise<any>): Promise<"success"|"failed"|"in_progress"> {
+    return new Promise((resolve) => {
+        Promise.race([
+            promise.catch(() => {resolve("failed")}),
+            promise.then(() => { resolve( "success") }),
+            new Promise(res => setTimeout(() => {resolve("in_progress")}, 1))
+        ]).then((val) => {resolve(val)})
+    });
+}
+
+async function allPromisesFailed(promises: Promise<any>[]): Promise<boolean> {
+    let statuses = await Promise.all(promises.map((promise) => getPromiseStatus(promise)));
+
+    return statuses.filter((status)=> status !== "failed").length === 0;
 }
 
 export async function makeHttpRequest(params: {
@@ -227,4 +247,14 @@ export function fallbackValue<T>(val: any, path: string|null = null, defaultVal:
     }
 
     return val;
+}
+
+export function extractErrorMessage(e: any): string {
+    if(e instanceof Error) {
+        // @ts-ignore
+        if((e.errors ?? []).length > 0) e = e.errors[0];
+        return e.message;
+    }
+    if(typeof e !== "string") return JSON.stringify(e);
+    return e;
 }

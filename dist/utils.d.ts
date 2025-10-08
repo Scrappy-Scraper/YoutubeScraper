@@ -3,6 +3,7 @@ export declare function raceRequests(params: {
     generateRequest: () => Promise<any>;
     amount: number;
     waitTime?: number;
+    shouldRetry?: ((e: any) => boolean);
 }): Promise<any>;
 export declare function makeHttpRequest(params: {
     url: string;
@@ -34,3 +35,4 @@ export type ObjNode = {
 } | ObjNode[] | number | boolean | string | null | undefined;
 export declare function isTrue(val: any): boolean;
 export declare function fallbackValue<T>(val: any, path?: string | null, defaultVal?: T | null): T | null;
+export declare function extractErrorMessage(e: any): string;
